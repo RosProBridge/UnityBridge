@@ -7,7 +7,7 @@ This documentation provides a comprehensive guide on how to integrate the ProBri
 Before you begin, ensure you have the following:
 
 - Git installed on your computer.
-- Unity Editor 2022.3 or later installed and ready to use.
+- Unity Editor 2018.4 or later installed and ready to use.
 
 ## Installation Guide
 
