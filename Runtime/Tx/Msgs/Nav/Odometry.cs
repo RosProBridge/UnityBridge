@@ -4,7 +4,7 @@ using ProBridge.Utils;
 
 namespace ProBridge.Tx
 {
-    [AddComponentMenu("ProBridge/Tx/Odometry")]
+    [AddComponentMenu("ProBridge/Tx/Nav/Odometry")]
     [RequireComponent(typeof(Rigidbody))]
     public class Odometry : ProBridgeTxMsgStamped<ROS.Msgs.Nav.Odometry>
     {

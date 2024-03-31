@@ -4,7 +4,7 @@ using ProBridge.Utils;
 
 namespace ProBridge.Tx
 {
-    [AddComponentMenu("ProBridge/Tx/Imu")]
+    [AddComponentMenu("ProBridge/Tx/Sensor/Imu")]
     [RequireComponent(typeof(Rigidbody))]
     public class Imu : ProBridgeTxMsgStamped<ROS.Msgs.Sensors.Imu>
     {

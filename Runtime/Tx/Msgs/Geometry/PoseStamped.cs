@@ -4,7 +4,7 @@ using ProBridge.Utils;
 
 namespace ProBridge.Tx
 {
-    [AddComponentMenu("ProBridge/Tx/PoseStamped")]
+    [AddComponentMenu("ProBridge/Tx/Geometry/PoseStamped")]
     public class PoseStamped : ProBridgeTxMsgStamped<ROS.Msgs.Geometry.PoseStamped>
     {
         public bool globalPose;

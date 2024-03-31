@@ -4,8 +4,8 @@ using ProBridge.Utils;
 
 namespace ProBridge.Tx
 {
-    [AddComponentMenu("ProBridge/Tx/Nav")]
-    public class Nav : ProBridgeTxMsgStamped<ROS.Msgs.Sensors.NavSatFix>
+    [AddComponentMenu("ProBridge/Tx/Sensor/NavSatFix")]
+    public class NavSatFix : ProBridgeTxMsgStamped<ROS.Msgs.Sensors.NavSatFix>
     {
         [Header("Params")]
         public Vector3 startLLA = new Vector3();

@@ -29,10 +29,6 @@ Within the Package Manager:
 
 ![Package Manager Add](Images/pm_add.png "Add package from git URL")
 
-```bash
-git clone https://g.a-r-s.dev/Unity/ProBridge.git
-```
-
 ### 3. Verifying Installation
 
 If the installation process was successful, you should now be able to see `ProBridge` listed among the installed packages in the Package Manager. This confirms the package is ready for use in your project.
