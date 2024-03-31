@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using ProBridge.Utils;
 
-namespace ProBridge.Tx
+namespace ProBridge.Tx.Geometry
 {
     [AddComponentMenu("ProBridge/Tx/Geometry/PoseStamped")]
     public class PoseStamped : ProBridgeTxMsgStamped<ROS.Msgs.Geometry.PoseStamped>

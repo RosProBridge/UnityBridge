@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using ProBridge.Utils;
 
-namespace ProBridge.Tx
+namespace ProBridge.Tx.Sensor
 {
     [AddComponentMenu("ProBridge/Tx/Sensor/Imu")]
     [RequireComponent(typeof(Rigidbody))]

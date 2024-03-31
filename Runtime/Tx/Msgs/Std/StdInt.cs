@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace ProBridge.Tx
+namespace ProBridge.Tx.Std
 {
     [AddComponentMenu("ProBridge/Tx/Std/Int")]
     public class StdInt : ProBridgeTxMsgStd<int>

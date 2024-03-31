@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using ProBridge.Utils;
 
-namespace ProBridge.Tx
+namespace ProBridge.Tx.Sensor
 {
     [AddComponentMenu("ProBridge/Tx/Sensor/NavSatFix")]
     public class NavSatFix : ProBridgeTxMsgStamped<ROS.Msgs.Sensors.NavSatFix>

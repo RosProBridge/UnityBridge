@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using ProBridge.Utils;
 
-namespace ProBridge.Tx
+namespace ProBridge.Tx.Nav
 {
     [AddComponentMenu("ProBridge/Tx/Nav/Odometry")]
     [RequireComponent(typeof(Rigidbody))]
