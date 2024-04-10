@@ -6,7 +6,7 @@ namespace ProBridge.Tx.Nav
 {
     [AddComponentMenu("ProBridge/Tx/Nav/Odometry")]
     [RequireComponent(typeof(Rigidbody))]
-    public class Odometry : ProBridgeTxMsgStamped<ROS.Msgs.Nav.Odometry>
+    public class Odometry : ProBridgeTxStamped<ROS.Msgs.Nav.Odometry>
     {
         public string childFrameId;
         public bool originInStartPos;
@@ -16,11 +16,6 @@ namespace ProBridge.Tx.Nav
 
         public Rigidbody Body { get; private set; }
         private Vector3 _startPos;
-
-        protected override string GetMsgType()
-        {
-            return "nav_msgs.msg.Odometry";
-        }
 
         protected override void OnStart()
         {

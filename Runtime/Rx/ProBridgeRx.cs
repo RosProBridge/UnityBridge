@@ -1,33 +1,30 @@
+using ProBridge.ROS.Msgs.Std;
+using System;
 using UnityEngine;
 
 namespace ProBridge.Rx
 {
-    public abstract class ProBridgeRx : MonoBehaviour
+    public abstract class ProBridgeRx<T> : MonoBehaviour where T : ROS.Msgs.IRosMsg, new()
     {
         public string topic = "";
 
-        [Header("Debug")]
-        public bool LogMessage = false;
+        protected abstract void OnMessage(T msg);
 
-        public abstract string GetMsgType();
-        protected abstract void OnMessage(ProBridge.Msg msg);
+        private T __msg = new();
 
         private void GetMsg(ProBridge.Msg msg)
         {
             if (!isActiveAndEnabled || topic == "")
                 return;
 
-            if (msg.t != GetMsgType())
+            if (msg.t != __msg.GetRosType())
                 return;
 
             // TO DO переделать на регулярное выражение 
             if (msg.n != topic)
                 return;
 
-            if (LogMessage)
-                Debug.Log(msg);
-
-            OnMessage(msg);
+            OnMessage(Newtonsoft.Json.JsonConvert.DeserializeObject<T>(msg.d.ToString()));
         }
 
         private void Awake()
