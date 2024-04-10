@@ -9,7 +9,6 @@ namespace ProBridge.Tx
         protected override ProBridge.Msg GetMsg(TimeSpan ts)
         {
             data.clock = ts;
-            //data = new ROS.Msgs.Rosgraph.Clock(ts);
             return base.GetMsg(ts);
         }
     }

@@ -103,7 +103,7 @@ namespace ProBridge.ROS.Msgs.Std
     {
         string IRosMsg.GetRosType() { return "std_msgs.msg.Header"; }
 
-        public Time stamp;
+        public Time stamp = new Time();
 #if ROS_V2
 #else
         public UInt32 seq;
@@ -114,6 +114,16 @@ namespace ProBridge.ROS.Msgs.Std
     public interface IStamped
     {
         Header header { get; }
+    }
+}
+
+namespace ProBridge.ROS.Msgs.Tf
+{
+    public class tfMessage : IRosMsg
+    {
+        string IRosMsg.GetRosType() { return "tf.msg.tfMessage"; }
+
+        public Geometry.TransformStamped[] transforms;
     }
 }
 
@@ -221,6 +231,22 @@ namespace ProBridge.ROS.Msgs.Geometry
 
         public Twist twist = new Twist();
         public float[] covariance = new float[36];
+    }
+
+    public class Transform : IRosMsg
+    {
+        string IRosMsg.GetRosType() { return "geometry_msgs.msg.Transform"; }
+        public Vector3 translation = new Vector3();
+        public Quaternion rotation = new Quaternion();
+    }
+
+    public class TransformStamped : IRosMsg, IStamped
+    {
+        string IRosMsg.GetRosType() { return "geometry_msgs.msg.TransformStamped"; }
+
+        public Header header { get; set; } = new Header();
+        public string child_frame_id;
+        public Transform transform = new Transform();
     }
 }
 
