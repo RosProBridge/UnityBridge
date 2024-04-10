@@ -332,6 +332,7 @@ namespace ProBridge.ROS.Msgs.Nav
 
 namespace ProBridge.ROS.Msgs.Chassis
 {
+    [Serializable]
     public class ChassisStatus : IRosMsg, IStamped
     {
         string IRosMsg.GetRosType() { return "chassis_msgs.msg.ChassisStatus"; }
@@ -356,6 +357,7 @@ namespace ProBridge.ROS.Msgs.Chassis
         public bool sto;                                // Разрешение движения
     }
 
+    [Serializable]
     public class ChassisFeed : IRosMsg, IStamped
     {
         string IRosMsg.GetRosType() { return "chassis_msgs.msg.ChassisFeed"; }
@@ -372,6 +374,7 @@ namespace ProBridge.ROS.Msgs.Chassis
         public float[] brake_target = new float[0]; // Задание для тормозной системы [усл. ед]
     }
 
+    [Serializable]
     public class ChassisSignals : IRosMsg, IStamped
     {
         string IRosMsg.GetRosType() { return "chassis_msgs.msg.ChassisSignals"; }
@@ -384,10 +387,27 @@ namespace ProBridge.ROS.Msgs.Chassis
         public bool sound_signal;           // состояние звукового сигнала
         public byte[] aux = new byte[0];     // состояние дополнительного сигнального оборудования
     }
+
+    [Serializable]
+    public class ChassisControl : IRosMsg, IStamped
+    {
+        string IRosMsg.GetRosType() { return "chassis_msgs.msg.ChassisControl"; }
+
+        public Header header { get; set; } = new Header();
+
+        public float throttle;          //  0. <= throttle <= 1.
+        public float steer;             //  -1. <= steer <= 1.
+        public float brake;             //  0. <= brake <= 1
+        public bool hand_brake;         //  0. <= throttle <= 1.
+        public bool reverse;            //  reverse 0 or 1
+        public Int32 gear;              //  gear
+        public bool manual_gear_shift;  //  manual_gear_shift
+    }
 }
 
 namespace ProBridge.ROS.Msgs.Ackermann
 {
+    [Serializable]
     public class AckermannDrive : IRosMsg, IStamped
     {
         string IRosMsg.GetRosType() { return "ackermann_msgs.msg.AckermannDrive"; }

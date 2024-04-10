@@ -60,7 +60,7 @@ namespace ProBridge.Tx.Tf
 
                     foreach (var child in link.children)
                     {
-                        if (child.frame_id == "")
+                        if (child is null || child.frame_id == "")
                             continue;
 
                         var localPosition = link.transform.InverseTransformPoint(child.transform.position);
