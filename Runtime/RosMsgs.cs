@@ -12,6 +12,11 @@ namespace ProBridge.ROS
 
 namespace ProBridge.ROS.Msgs
 {
+    public interface IRosMsg
+    {
+        public string GetRosType();
+    }
+
 #if ROS_V2
     public class Time
     {
@@ -57,24 +62,48 @@ namespace ProBridge.ROS.Msgs
 
 namespace ProBridge.ROS.Msgs.Std
 {
-    public class Time
+    public abstract class StdMsg<T> : IRosMsg
     {
-        public Msgs.Time data = new Msgs.Time();
+        public T data;
 
-        public Time(TimeSpan time)
+        public abstract string GetRosType();
+    }
+
+    public class StdTime : StdMsg<Time>
+    {
+        public override string GetRosType() { return "std_msgs.msg.Time"; }
+
+        public StdTime(TimeSpan time)
         {
             data = time;
         }
     }
 
-    public class Native<T> where T : IConvertible
+    public class StdBool : StdMsg<bool>
     {
-        public T data;
+        public override string GetRosType() { return "std_msgs.msg.Bool"; }
     }
 
-    public class Header
+    public class StdFloat : StdMsg<float>
     {
-        public Msgs.Time stamp;
+        public override string GetRosType() { return "std_msgs.msg.Float32"; }
+    }
+
+    public class StdInt : StdMsg<int>
+    {
+        public override string GetRosType() { return "std_msgs.msg.Int32"; }
+    }
+
+    public class StdString : StdMsg<string>
+    {
+        public override string GetRosType() { return "std_msgs.msg.String"; }
+    }
+
+    public class Header : IRosMsg
+    {
+        string IRosMsg.GetRosType() { return "std_msgs.msg.Header"; }
+
+        public Time stamp;
 #if ROS_V2
 #else
         public UInt32 seq;
@@ -90,8 +119,10 @@ namespace ProBridge.ROS.Msgs.Std
 
 namespace ProBridge.ROS.Msgs.Rosgraph
 {
-    public class Clock
+    public class Clock : IRosMsg
     {
+        string IRosMsg.GetRosType() { return "rosgraph_msgs.msg.Clock"; }
+
         public Time clock = new Time();
 
         public Clock() { }
@@ -105,8 +136,10 @@ namespace ProBridge.ROS.Msgs.Rosgraph
 
 namespace ProBridge.ROS.Msgs.Geometry
 {
-    public class Point
+    public class Point : IRosMsg
     {
+        string IRosMsg.GetRosType() { return "geometry_msgs.msg.Point"; }
+
         public double x { get; set; }
         public double y { get; set; }
         public double z { get; set; }
@@ -115,59 +148,77 @@ namespace ProBridge.ROS.Msgs.Geometry
         public static implicit operator Vector3(Point value) { return new Vector3() { x = value.x, y = value.y, z = value.z }; }
     }
 
-    public class Vector3
+    public class Vector3 : IRosMsg
     {
+        string IRosMsg.GetRosType() { return "geometry_msgs.msg.Vector3"; }
+
         public double x { get; set; }
         public double y { get; set; }
         public double z { get; set; }
     }
 
-    public class PointStamped : IStamped
+    public class PointStamped : IRosMsg, IStamped
     {
+        string IRosMsg.GetRosType() { return "geometry_msgs.msg.PointStamped"; }
+
         public Header header { get; set; } = new Header();
         public Point point = new Point();
     }
 
-    public class Quaternion
+    public class Quaternion : IRosMsg
     {
+        string IRosMsg.GetRosType() { return "geometry_msgs.msg.Quaternion"; }
+
         public double x;
         public double y;
         public double z;
         public double w;
     }
 
-    public class Pose
+    public class Pose : IRosMsg
     {
+        string IRosMsg.GetRosType() { return "geometry_msgs.msg.Pose"; }
+
         public Point position = new Point();
         public Quaternion orientation = new Quaternion() { w = 1 };
     }
 
-    public class PoseStamped : IStamped
+    public class PoseStamped : IRosMsg, IStamped
     {
+        string IRosMsg.GetRosType() { return "geometry_msgs.msg.PoseStamped"; }
+
         public Header header { get; set; } = new Header();
         public Pose pose = new Pose();
     }
 
-    public class PoseWithCovariance
+    public class PoseWithCovariance : IRosMsg
     {
+        string IRosMsg.GetRosType() { return "geometry_msgs.msg.PoseWithCovariance"; }
+
         public Pose pose = new Pose();
         public float[] covariance = new float[36];
     }
 
-    public class Twist
+    public class Twist : IRosMsg
     {
+        string IRosMsg.GetRosType() { return "geometry_msgs.msg.Twist"; }
+
         public Point linear = new Point();
         public Point angular = new Point();
     }
 
-    public class TwistStamped : IStamped
+    public class TwistStamped : IRosMsg, IStamped
     {
+        string IRosMsg.GetRosType() { return "geometry_msgs.msg.TwistStamped"; }
+
         public Header header { get; set; } = new Header();
         public Twist twist = new Twist();
     }
 
-    public class TwistithCovariance
+    public class TwistithCovariance : IRosMsg
     {
+        string IRosMsg.GetRosType() { return "geometry_msgs.msg.TwistithCovariance"; }
+
         public Twist twist = new Twist();
         public float[] covariance = new float[36];
     }
@@ -175,8 +226,10 @@ namespace ProBridge.ROS.Msgs.Geometry
 
 namespace ProBridge.ROS.Msgs.Sensors
 {
-    public class Imu : IStamped
+    public class Imu : IRosMsg, IStamped
     {
+        string IRosMsg.GetRosType() { return "sensor_msgs.msg.Imu"; }
+
         public Header header { get; set; } = new Header();
         public Geometry.Quaternion orientation = new Geometry.Quaternion() { w = 1 };
         public float[] orientation_covariance = new float[9];
@@ -186,8 +239,10 @@ namespace ProBridge.ROS.Msgs.Sensors
         public float[] linear_acceleration_covariance = new float[9];
     }
 
-    public class NavSatFix : IStamped
+    public class NavSatFix : IRosMsg, IStamped
     {
+        string IRosMsg.GetRosType() { return "sensor_msgs.msg.NavSatFix"; }
+
         public const byte COVARIANCE_TYPE_UNKNOWN = 0;
         public const byte COVARIANCE_TYPE_APPROXIMATED = 1;
         public const byte COVARIANCE_TYPE_DIAGONAL_KNOWN = 2;
@@ -231,15 +286,19 @@ namespace ProBridge.ROS.Msgs.Sensors
 
 namespace ProBridge.ROS.Msgs.Nav
 {
-    public class Odometry : IStamped
+    public class Odometry : IRosMsg, IStamped
     {
+        string IRosMsg.GetRosType() { return "nav_msgs.msg.Odometry"; }
+
         public Header header { get; set; } = new Header();
         public string child_frame_id;
         public Geometry.PoseWithCovariance pose = new Geometry.PoseWithCovariance();
         public Geometry.TwistithCovariance twist = new Geometry.TwistithCovariance();
     }
-    public class Path : IStamped
+    public class Path : IRosMsg, IStamped
     {
+        string IRosMsg.GetRosType() { return "nav_msgs.msg.Path"; }
+
         public Header header { get; set; } = new Header();
         public Geometry.PoseStamped[] poses;
     }
@@ -247,8 +306,10 @@ namespace ProBridge.ROS.Msgs.Nav
 
 namespace ProBridge.ROS.Msgs.Chassis
 {
-    public class ChassisStatus : IStamped
+    public class ChassisStatus : IRosMsg, IStamped
     {
+        string IRosMsg.GetRosType() { return "chassis_msgs.msg.ChassisStatus"; }
+
         public Header header { get; set; } = new Header();
 
         public float battery;                           // Напряжение АКБ Вольт
@@ -269,8 +330,10 @@ namespace ProBridge.ROS.Msgs.Chassis
         public bool sto;                                // Разрешение движения
     }
 
-    public class ChassisFeed : IStamped
+    public class ChassisFeed : IRosMsg, IStamped
     {
+        string IRosMsg.GetRosType() { return "chassis_msgs.msg.ChassisFeed"; }
+
         public Header header { get; set; } = new Std.Header();
         public float speed;                         // Показания датчика скорости [м/сек]
         public Int16[] engine_value = new Int16[0]; // Обороты двигателя [об/мин]
@@ -283,8 +346,10 @@ namespace ProBridge.ROS.Msgs.Chassis
         public float[] brake_target = new float[0]; // Задание для тормозной системы [усл. ед]
     }
 
-    public class ChassisSignals : IStamped
+    public class ChassisSignals : IRosMsg, IStamped
     {
+        string IRosMsg.GetRosType() { return "chassis_msgs.msg.ChassisSignals"; }
+
         public Header header { get; set; } = new Std.Header();
         public bool lights_side;            // состояние габаритных огней
         public bool lights_head;            // состояние фонарей головного света
@@ -297,8 +362,10 @@ namespace ProBridge.ROS.Msgs.Chassis
 
 namespace ProBridge.ROS.Msgs.Ackermann
 {
-    public class AckermannDrive : IStamped
+    public class AckermannDrive : IRosMsg, IStamped
     {
+        string IRosMsg.GetRosType() { return "ackermann_msgs.msg.AckermannDrive"; }
+
         public Header header { get; set; } = new Header();
 
         public float steering_angle;                  // desired virtual angle (radians)

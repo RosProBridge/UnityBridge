@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace ProBridge.Tx
 {
-    public abstract class ProBridgeTx<T> : MonoBehaviour where T : MonoBehaviour
+    public abstract class ProBridgeTx<T> : MonoBehaviour where T : ROS.Msgs.IRosMsg, new()
     {
         #region Inspector
         public ProBridgeHost host;
@@ -13,6 +13,8 @@ namespace ProBridge.Tx
         #endregion
 
         public bool Active { get; set; } = true;
+
+        public T data { get; } = new T();
 
         public EventHandler<ProBridge.Msg> OnSendMessage { get; set; } = delegate { };
 
@@ -49,7 +51,7 @@ namespace ProBridge.Tx
             }
             _lastSimTime = st;
 
-            if (Active)
+            if (Active && topic != "")
             {
                 var msg = GetMsg(ProBridgeServer.SimTime);
                 OnSendMessage?.Invoke(this, msg);
@@ -58,9 +60,18 @@ namespace ProBridge.Tx
             }
         }
 
-        protected abstract void OnStart();
-        protected abstract void OnStop();
+        protected virtual ProBridge.Msg GetMsg(TimeSpan ts)
+        {
+            return new ProBridge.Msg()
+            {
+                n = topic,
+                t = data.GetRosType(),
+                q = qos,
+                d = data
+            };
+        }
 
-        protected abstract ProBridge.Msg GetMsg(TimeSpan ts);
+        protected virtual void OnStart() { }
+        protected virtual void OnStop() { }
     }
 }

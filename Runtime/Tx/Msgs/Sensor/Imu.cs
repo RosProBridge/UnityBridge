@@ -6,18 +6,13 @@ namespace ProBridge.Tx.Sensor
 {
     [AddComponentMenu("ProBridge/Tx/Sensor/Imu")]
     [RequireComponent(typeof(Rigidbody))]
-    public class Imu : ProBridgeTxMsgStamped<ROS.Msgs.Sensors.Imu>
+    public class Imu : ProBridgeTxStamped<ROS.Msgs.Sensors.Imu>
     {
         public Rigidbody Body { get; private set; }
         public Vector3 Acceleration { get; private set; }
 
         private float _lastTime;
         private Vector3 _lastVel;
-
-        protected override string GetMsgType()
-        {
-            return "sensor_msgs.msg.Imu";
-        }
 
         protected override void OnStart()
         {

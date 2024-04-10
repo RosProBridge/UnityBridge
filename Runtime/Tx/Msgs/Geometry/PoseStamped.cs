@@ -5,14 +5,9 @@ using ProBridge.Utils;
 namespace ProBridge.Tx.Geometry
 {
     [AddComponentMenu("ProBridge/Tx/Geometry/PoseStamped")]
-    public class PoseStamped : ProBridgeTxMsgStamped<ROS.Msgs.Geometry.PoseStamped>
+    public class PoseStamped : ProBridgeTxStamped<ROS.Msgs.Geometry.PoseStamped>
     {
         public bool globalPose;
-
-        protected override string GetMsgType()
-        {
-            return "geometry_msgs.msg.PoseStamped";
-        }
 
         protected override ProBridge.Msg GetMsg(TimeSpan ts)
         {
