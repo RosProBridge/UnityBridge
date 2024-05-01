@@ -4,32 +4,18 @@ namespace ProBridge
 {
     public class ProBridgeSingletone<T> : MonoBehaviour where T : MonoBehaviour
     {
-        private static T instance;
         public static T Instance
         {
             get
             {
-                if (instance == null)
-                    instance = FindObjectOfType<T>();
-                if (instance == null)
-                    Debug.LogError("Singleton<" + typeof(T) + "> instance has been not found.");
-                return instance;
+                return FindObjectOfType<T>();
             }
-        }
-
-        protected void Awake()
-        {
-            if (instance == null)
-                instance = this as T;
-            else if (instance != this)
-                DestroySelf();
         }
 
         protected void OnValidate()
         {
-            if (instance == null)
-                instance = this as T;
-            else if (instance != this)
+            if (FindObjectsOfType<T>().Length > 1)
+
             {
                 Debug.LogError("Singleton<" + this.GetType() + "> already has an instance on scene. Component will be destroyed.");
 #if UNITY_EDITOR
@@ -38,7 +24,6 @@ namespace ProBridge
 #endif
             }
         }
-
 
         private void DestroySelf()
         {
