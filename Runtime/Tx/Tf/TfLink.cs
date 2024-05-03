@@ -6,6 +6,13 @@ namespace ProBridge.Tx.Tf
     public class TfLink : MonoBehaviour
     {
         public string frame_id = "";
+        public bool fixed_frame;
         public TfLink[] children = new TfLink[0];
+
+        public void Start()
+        {
+            if (fixed_frame)
+                transform.parent = null;
+        }
     }
 }
