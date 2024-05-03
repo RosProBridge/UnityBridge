@@ -54,7 +54,7 @@ namespace ProBridge
 
         private void FixedUpdate()
         {
-            SimTime = new TimeSpan((long)(_initTime + Time.time * TimeSpan.TicksPerSecond));
+            SimTime = new TimeSpan(_initTime + (long)(Time.time * TimeSpan.TicksPerSecond));
 
             while (_queue.Count > 0)
                 MessageEvent.Invoke(_queue.Dequeue());
