@@ -12,6 +12,8 @@ namespace ProBridge
 {
     public class ProBridge : IDisposable
     {
+        private const uint MAX_UDP_SIZE = 65500;
+
         public class Msg
         {
             /// <summary>
@@ -42,6 +44,7 @@ namespace ProBridge
         private UdpClient _recv = null;
         private UdpClient _send = new UdpClient();
         private Thread _th = null;
+
 
         public ProBridge(int port = 47777)
         {
@@ -77,7 +80,10 @@ namespace ProBridge
                 buf = compressedStream.ToArray();
             }
 
-            _send.Send(buf, buf.Length, new IPEndPoint(IPAddress.Parse(host.addr), host.port));
+            if (buf.Length > MAX_UDP_SIZE)
+                Console.WriteLine($"Skipping large message of size {buf.Length} bytes.");
+            else
+                _send.Send(buf, buf.Length, new IPEndPoint(IPAddress.Parse(host.addr), host.port));
         }
 
         public void Receive()

@@ -99,6 +99,16 @@ namespace ProBridge.ROS.Msgs.Std
         public override string GetRosType() { return "std_msgs.msg.String"; }
     }
 
+    public class ColorRGBA : IRosMsg
+    {
+        string IRosMsg.GetRosType() { return "std_msgs.msg.ColorRGBA"; }
+
+        public float r;
+        public float g;
+        public float b;
+        public float a;
+    }
+
     public class Header : IRosMsg
     {
         string IRosMsg.GetRosType() { return "std_msgs.msg.Header"; }
@@ -327,6 +337,37 @@ namespace ProBridge.ROS.Msgs.Nav
 
         public Header header { get; set; } = new Header();
         public Geometry.PoseStamped[] poses;
+    }
+}
+
+namespace ProBridge.ROS.Msgs.Visualization
+{
+    public class Marker : IRosMsg, IStamped
+    {
+        string IRosMsg.GetRosType() { return "visualization_msgs.msg.Marker"; }
+
+        public Header header { get; set; } = new Header();
+        public string ns;
+        public Int32 id;
+        public Int32 type;
+        public Int32 action;
+        public Geometry.Pose pose;
+        public Geometry.Vector3 scale;
+        public ColorRGBA color;
+        public Time lifetime;
+        public bool frame_locked;
+        public Geometry.Point[] points;
+        public ColorRGBA[] colors;
+        public string text;
+        public string mesh_resource;
+        public bool mesh_use_embedded_materials;
+    }
+
+    public class MarkerArray : IRosMsg
+    {
+        string IRosMsg.GetRosType() { return "visualization_msgs.msg.MarkerArray"; }
+
+        Marker[] markers;
     }
 }
 

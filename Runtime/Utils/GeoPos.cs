@@ -27,8 +27,6 @@ namespace ProBridge.Utils
 
         public static void Local2Global(Vector3 local, ref double lat, ref double lon, ref double alt)
         {
-            //bool correct = origin.x < -90.0 || origin.x  > 90.0 ? true : false;
-
             LocalCartesian(lat, // origin.Latitude
                            lon, // origin.Longitude
                            alt // origin.Altitude
@@ -42,8 +40,6 @@ namespace ProBridge.Utils
                     out lat,
                     out lon,
                     out alt, M);
-
-            // alt = n_alt + local.y;
         }
         /*
         public static Vector3 Global2Local(Vector3d global, Vector3d origin)
@@ -100,9 +96,6 @@ namespace ProBridge.Utils
             double zc = _z0 + _r[6] * x + _r[7] * y + _r[8] * z;
 
             GeoIntReverse(xc, yc, zc, out lat, out lon, out h, M);
-
-            //if (M != null)
-            //    LocCartMatrixMultiply(M);
         }
 
         static void IntForward(double lat, double lon, double h,
@@ -116,9 +109,6 @@ namespace ProBridge.Utils
             x = _r[0] * xc + _r[3] * yc + _r[6] * zc;
             y = _r[1] * xc + _r[4] * yc + _r[7] * zc;
             z = _r[2] * xc + _r[5] * yc + _r[8] * zc;
-
-            //if (M != null)
-            //    LocCartMatrixMultiply(M);
         }
 
         static void LocCartReset(double lat0, double lon0, double h0)
@@ -252,9 +242,6 @@ namespace ProBridge.Utils
 
         static void GeoIntReverse(double X, double Y, double Z, out double lat, out double lon, out double h, double[] M)
         {
-            //Debug.Log(string.Format("local pos_0: x={0}, y={1}, z={2}", X, Y, Z));
-            //Debug.Log(string.Format("global pos_0: x={0}, y={1}, z={2}", lat, lon, h));
-
             double R = Math.Sqrt(Math.Pow(X, 2) + Math.Pow(Y, 2));
             double slam;
             //		R ? Y / R : 0;
@@ -271,9 +258,6 @@ namespace ProBridge.Utils
                 clam = 1;
 
             h = Math.Sqrt(Math.Pow(R, 2) + Math.Pow(Z, 2));      // Distance to center of earth
-
-            // Debug.Log(string.Format("local pos_1: x={0}, y={1}, z={2}", X, Y, Z));
-            // Debug.Log(string.Format("global pos_1: x={0}, y={1}, z={2}", lat, lon, h));
 
             double sphi, cphi;
             if (h > _maxrad)
@@ -476,8 +460,6 @@ namespace ProBridge.Utils
             M[1] = -clam * sphi; M[4] = -slam * sphi; M[7] = cphi;
             // Local Z axis (up) in geocentric coords
             M[2] = clam * cphi; M[5] = slam * cphi; M[8] = sphi;
-
-
         }
 
         static void Swap<T>(ref T lhs, ref T rhs)

@@ -33,5 +33,14 @@ namespace ProBridge.Rx
 
             srv.MessageEvent.AddListener(GetMsg);
         }
+
+        private void OnDestroy()
+        {
+            var srv = FindObjectOfType<ProBridgeServer>();
+            if (srv == null)
+                return;
+
+            srv.MessageEvent.RemoveListener(GetMsg);
+        }
     }
 }
