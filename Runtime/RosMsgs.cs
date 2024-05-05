@@ -346,6 +346,23 @@ namespace ProBridge.ROS.Msgs.Visualization
     {
         string IRosMsg.GetRosType() { return "visualization_msgs.msg.Marker"; }
 
+        public const byte ARROW = 0;
+        public const byte CUBE = 1;
+        public const byte SPHERE = 2;
+        public const byte CYLINDER = 3;
+        public const byte LINE_STRIP = 4;
+        public const byte LINE_LIST = 5;
+        public const byte CUBE_LIST = 6;
+        public const byte SPHERE_LIST = 7;
+        public const byte POINTS = 8;
+        public const byte TEXT_VIEW_FACING = 9;
+        public const byte MESH_RESOURCE = 10;
+        public const byte TRIANGLE_LIST = 11;
+        public const byte ADD = 0;
+        public const byte MODIFY = 0;
+        public const byte DELETE = 2;
+        public const byte DELETEALL = 3;
+
         public Header header { get; set; } = new Header();
         public string ns;
         public Int32 id;
@@ -367,7 +384,7 @@ namespace ProBridge.ROS.Msgs.Visualization
     {
         string IRosMsg.GetRosType() { return "visualization_msgs.msg.MarkerArray"; }
 
-        Marker[] markers;
+        public Marker[] markers;
     }
 }
 
