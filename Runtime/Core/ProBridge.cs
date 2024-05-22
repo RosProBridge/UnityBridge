@@ -16,11 +16,8 @@ namespace ProBridge
 
         public class Msg
         {
-#if ROS_V2
-            public byte v = 2;
-#else
-            public byte v = 1;
-#endif
+            public byte v;
+
             /// <summary>
             /// Topic name
             /// </summary>

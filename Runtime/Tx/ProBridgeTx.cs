@@ -66,6 +66,11 @@ namespace ProBridge.Tx
         {
             return new ProBridge.Msg()
             {
+#if ROS_V2
+                v = 2,
+#else
+                v = 1,
+#endif
                 n = topic,
                 t = data.GetRosType(),
 #if ROS_V2
