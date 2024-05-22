@@ -9,7 +9,9 @@ namespace ProBridge.Tx
         public ProBridgeHost host;
         public float sendRate = 0.025f;
         public string topic = "";
-        public string qos = ROS.QoS.DEFAULT;
+#if ROS_V2
+        public int qos = 10;
+#endif
         #endregion
 
         public bool Active { get; set; } = true;
@@ -66,7 +68,9 @@ namespace ProBridge.Tx
             {
                 n = topic,
                 t = data.GetRosType(),
+#if ROS_V2
                 q = qos,
+#endif
                 d = data
             };
         }

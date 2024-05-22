@@ -19,9 +19,14 @@ namespace ProBridge.Utils
         /// <para>[in]  ROS:    X-Forward(Easting)  Y-Left(Northing)   Z-Up                  </para>
         /// <para>[out] UNITY:  X-Right(Easting)    Y-Up               Z-Forward(Northing)   </para>
         /// </summary>
-        public static ROS.Msgs.Geometry.Vector3 FromRos(this Vector3 v)
+        public static Vector3 FromRos(this ROS.Msgs.Geometry.Vector3 v)
         {
-            return new ROS.Msgs.Geometry.Vector3() { x = -v.y, y = v.z, z = v.x };
+            return new Vector3((float)-v.y, (float)v.z, (float)v.x);
+        }
+
+        public static Vector3 FromRos(this ROS.Msgs.Geometry.Point v)
+        {
+            return new Vector3((float)-v.y, (float)v.z, (float)v.x);
         }
 
         /// <summary>
@@ -34,14 +39,19 @@ namespace ProBridge.Utils
             return new ROS.Msgs.Geometry.Vector3() { x = -v.z, y = v.x, z = -v.y };
         }
 
-        public static Quaternion FromRos(this Quaternion q)
+        public static Quaternion FromRos(this ROS.Msgs.Geometry.Quaternion q)
         {
-            return new Quaternion(q.y, -q.z, -q.x, q.w);
+            return new Quaternion((float)q.y, (float)-q.z, (float)-q.x, (float)q.w);
         }
 
         public static ROS.Msgs.Geometry.Quaternion ToRos(this Quaternion q)
         {
             return new ROS.Msgs.Geometry.Quaternion() { x = -q.z, y = q.x, z = -q.y, w = q.w };
+        }
+
+        public static Color ToUnityColor(this ROS.Msgs.Std.ColorRGBA c)
+        {
+            return new Color(c.r, c.g, c.b, c.a);
         }
     }
 }

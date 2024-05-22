@@ -16,6 +16,11 @@ namespace ProBridge
 
         public class Msg
         {
+#if ROS_V2
+            public byte v = 2;
+#else
+            public byte v = 1;
+#endif
             /// <summary>
             /// Topic name
             /// </summary>
@@ -26,10 +31,12 @@ namespace ProBridge
             /// </summary>
             public string t;
 
+#if ROS_V2
             /// <summary>
             /// Quality od service, like as "qos_profile_system_default" or "qos_profile_sensor_data"
             /// </summary>
-            public string q = "qos_profile_system_default";
+            public int q = 10;
+#endif
 
             /// <summary>
             /// Value of object

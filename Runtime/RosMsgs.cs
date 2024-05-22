@@ -1,15 +1,6 @@
 using System;
 using ProBridge.ROS.Msgs.Std;
 
-namespace ProBridge.ROS
-{
-    public static class QoS
-    {
-        public static readonly string DEFAULT = "qos_profile_system_default";
-        public static readonly string BEST_EFFORT = "qos_profile_sensor_data";
-    }
-}
-
 namespace ProBridge.ROS.Msgs
 {
     public interface IRosMsg

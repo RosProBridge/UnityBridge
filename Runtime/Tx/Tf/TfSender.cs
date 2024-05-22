@@ -99,7 +99,9 @@ namespace ProBridge.Tx.Tf
                 {
                     n = "/tf",
                     t = (data as IRosMsg).GetRosType(),
-                    q = ROS.QoS.DEFAULT,
+#if ROS_V2
+                    q = 10,
+#endif
                     d = data
                 };
 
