@@ -49,6 +49,10 @@ namespace ProBridge.Utils
                 {
                     writer.Write((float)value);
                 }
+                else if (fieldType == typeof(double))
+                {
+                    writer.Write((double)value);
+                }
                 else if (fieldType == typeof(string))
                 {
                     WriteString(writer, (string)value);
@@ -113,6 +117,10 @@ namespace ProBridge.Utils
                 {
                     writer.Write((float)item);
                 }
+                else if (itemType == typeof(double))
+                {
+                    writer.Write((double)item);
+                }
                 else if (itemType == typeof(string))
                 {
                     WriteString(writer, (string)item);
@@ -135,6 +143,7 @@ namespace ProBridge.Utils
             if (type == typeof(uint)) return 4;
             if (type == typeof(float)) return 4;
             if (type == typeof(string)) return 4;
+            if (type == typeof(double)) return 8;
             if (type.IsClass) return 1; // Assuming classes don't need alignment
             throw new InvalidOperationException($"Unknown type for alignment: {type.Name}");
         }
@@ -213,6 +222,10 @@ namespace ProBridge.Utils
                 {
                     field.SetValue(obj, reader.ReadSingle());
                 }
+                else if (field.FieldType == typeof(double))
+                {
+                    field.SetValue(obj, reader.ReadDouble());
+                }
                 else if (field.FieldType == typeof(string))
                 {
                     field.SetValue(obj, ReadString(reader));
@@ -273,6 +286,10 @@ namespace ProBridge.Utils
                 else if (elementType == typeof(float))
                 {
                     array.SetValue(reader.ReadSingle(), i);
+                }
+                else if (elementType == typeof(double))
+                {
+                    array.SetValue(reader.ReadDouble(), i);
                 }
                 else if (elementType == typeof(string))
                 {
