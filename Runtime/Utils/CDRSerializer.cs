@@ -148,5 +148,124 @@ namespace ProBridge.Utils
                 writer.Write((byte)0); // Write padding bytes
             }
         }
+
+        public static T Deserialize<T>(byte[] data) where T : new()
+        {
+            using (MemoryStream ms = new MemoryStream(data))
+            {
+                using (BinaryReader reader = new BinaryReader(ms))
+                {
+                    return (T)DeserializeObject(reader, typeof(T));
+                }
+            }
+        }
+        private static object DeserializeObject(BinaryReader reader, Type type)
+        {
+            object obj = Activator.CreateInstance(type);
+
+            foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+            {
+                AlignStream(reader, GetAlignment(field.FieldType));
+
+                if (field.FieldType == typeof(byte))
+                {
+                    field.SetValue(obj, reader.ReadByte());
+                }
+                else if (field.FieldType == typeof(int))
+                {
+                    field.SetValue(obj, reader.ReadInt32());
+                }
+                else if (field.FieldType == typeof(uint))
+                {
+                    field.SetValue(obj, reader.ReadUInt32());
+                }
+                else if (field.FieldType == typeof(float))
+                {
+                    field.SetValue(obj, reader.ReadSingle());
+                }
+                else if (field.FieldType == typeof(string))
+                {
+                    field.SetValue(obj, ReadString(reader));
+                }
+                else if (field.FieldType.IsArray)
+                {
+                    field.SetValue(obj, ReadArray(reader, field.FieldType.GetElementType()));
+                }
+                else if (field.FieldType.IsClass && !field.FieldType.IsPrimitive) // Classes
+                {
+                    field.SetValue(obj, DeserializeObject(reader, field.FieldType));
+                }
+                else
+                {
+                    throw new InvalidOperationException($"Unsupported data type: {field.FieldType.Name}");
+                }
+            }
+
+            return obj;
+        }
+
+        private static string ReadString(BinaryReader reader)
+        {
+            int length = reader.ReadInt32();
+            if (length == 0)
+            {
+                return null;
+            }
+            return Encoding.UTF8.GetString(reader.ReadBytes(length));
+        }
+
+        private static Array ReadArray(BinaryReader reader, Type elementType)
+        {
+            int length = reader.ReadInt32();
+            if (length == 0)
+            {
+                return Array.CreateInstance(elementType, 0);
+            }
+
+            Array array = Array.CreateInstance(elementType, length);
+
+            for (int i = 0; i < length; i++)
+            {
+                AlignStream(reader, GetAlignment(elementType));
+
+                if (elementType == typeof(byte))
+                {
+                    array.SetValue(reader.ReadByte(), i);
+                }
+                else if (elementType == typeof(int))
+                {
+                    array.SetValue(reader.ReadInt32(), i);
+                }
+                else if (elementType == typeof(uint))
+                {
+                    array.SetValue(reader.ReadUInt32(), i);
+                }
+                else if (elementType == typeof(float))
+                {
+                    array.SetValue(reader.ReadSingle(), i);
+                }
+                else if (elementType == typeof(string))
+                {
+                    array.SetValue(ReadString(reader), i);
+                }
+                else if (elementType.IsClass && !elementType.IsPrimitive) // Classes
+                {
+                    array.SetValue(DeserializeObject(reader, elementType), i);
+                }
+                else
+                {
+                    throw new InvalidOperationException($"Unsupported array element type: {elementType.Name}");
+                }
+            }
+
+            return array;
+        }
+
+        private static void AlignStream(BinaryReader reader, int alignment)
+        {
+            long position = reader.BaseStream.Position;
+            long padding = (alignment - (position % alignment)) % alignment;
+            reader.BaseStream.Seek(padding, SeekOrigin.Current); // Skip padding bytes
+        }
     }
 }
