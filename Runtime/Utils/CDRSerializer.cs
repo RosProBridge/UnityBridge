@@ -95,14 +95,6 @@ namespace ProBridge.Utils
 
         private static void WriteArray(BinaryWriter writer, Array array)
         {
-            if (array == null)
-            {
-                writer.Write(0); // Length 0 for null arrays
-                return;
-            }
-
-            writer.Write(array.Length);
-
             foreach (var item in array)
             {
                 Type itemType = item.GetType();
@@ -240,7 +232,9 @@ namespace ProBridge.Utils
                 }
                 else if (field.FieldType.IsArray)
                 {
-                    field.SetValue(obj, ReadArray(reader, field.FieldType.GetElementType()));
+                    var arr = (Array)field.GetValue(obj);
+                    var arrLen = arr.Length;
+                    field.SetValue(obj, ReadArray(reader, field.FieldType.GetElementType(), arrLen));
                 }
                 else if (field.FieldType.IsClass && !field.FieldType.IsPrimitive) // Classes
                 {
@@ -271,9 +265,8 @@ namespace ProBridge.Utils
             return str;
         }
 
-        private static Array ReadArray(BinaryReader reader, Type elementType)
+        private static Array ReadArray(BinaryReader reader, Type elementType, int length)
         {
-            int length = reader.ReadInt32();
             if (length == 0)
             {
                 return Array.CreateInstance(elementType, 0);
