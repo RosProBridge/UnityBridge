@@ -142,7 +142,7 @@ namespace ProBridge.Utils
             if (type == typeof(uint)) return 4;
             if (type == typeof(float)) return 4;
             if (type == typeof(string)) return 4;
-            if (type == typeof(double)) return 8;
+            if (type == typeof(double)) return 4;
             if (type.IsClass) return 1; // Assuming classes don't need alignment
             throw new InvalidOperationException($"Unknown type for alignment: {type.Name}");
         }
