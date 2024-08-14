@@ -87,8 +87,9 @@ namespace ProBridge.Utils
             else
             {
                 var stringBytes = Encoding.UTF8.GetBytes(value);
-                writer.Write(stringBytes.Length);
+                writer.Write(stringBytes.Length + 1);
                 writer.Write(stringBytes);
+                writer.Write((byte)0);
             }
         }
 
@@ -261,7 +262,13 @@ namespace ProBridge.Utils
             {
                 return null;
             }
-            return Encoding.UTF8.GetString(reader.ReadBytes(length));
+            var str = Encoding.UTF8.GetString(reader.ReadBytes(length-1));
+            
+            // Skip the null terminator
+            reader.ReadByte();
+            
+            
+            return str;
         }
 
         private static Array ReadArray(BinaryReader reader, Type elementType)
