@@ -14,6 +14,12 @@ namespace ProBridge.Utils
             {
                 using (BinaryWriter writer = new BinaryWriter(ms))
                 {
+                    // CDR Header
+                    writer.Write((byte)0x00);
+                    writer.Write((byte)0x01);
+                    writer.Write((byte)0x00);
+                    writer.Write((byte)0x00);
+                    
                     SerializeObject(writer, obj);
                 }
                 return ms.ToArray();
@@ -164,6 +170,7 @@ namespace ProBridge.Utils
             {
                 using (BinaryReader reader = new BinaryReader(ms))
                 {
+                    reader.BaseStream.Seek(4, SeekOrigin.Begin); // Skip the first 4 header bytes
                     return (T)DeserializeObject(reader, typeof(T));
                 }
             }
