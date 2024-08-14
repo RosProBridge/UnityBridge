@@ -259,11 +259,11 @@ namespace ProBridge.ROS.Msgs.Sensors
 
         public Header header { get; set; } = new Header();
         public Geometry.Quaternion orientation = new Geometry.Quaternion() { w = 1 };
-        public float[] orientation_covariance = new float[9];
+        public double[] orientation_covariance = new double[9];
         public Geometry.Vector3 angular_velocity = new Geometry.Vector3();
-        public float[] angular_velocity_covariance = new float[9];
+        public double[] angular_velocity_covariance = new double[9];
         public Geometry.Vector3 linear_acceleration = new Geometry.Vector3();
-        public float[] linear_acceleration_covariance = new float[9];
+        public double[] linear_acceleration_covariance = new double[9];
     }
 
     public class NavSatFix : IRosMsg, IStamped
