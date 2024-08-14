@@ -8,6 +8,13 @@ namespace ProBridge.Utils
 {   
     public static class CDRSerializer
     {
+        
+#if ROS_V2
+        // Used to add alignment and string terminator incase of ROS2
+        private static bool ROS2Serialization = true;
+#else
+        private static bool ROS2Serialization = false;
+#endif
         public static byte[] Serialize(object obj)
         {
             using (MemoryStream ms = new MemoryStream())
@@ -36,8 +43,8 @@ namespace ProBridge.Utils
             {
                 object value = field.GetValue(obj);
                 Type fieldType = value.GetType();
-                
-                AlignStream(writer, GetAlignment(fieldType));
+
+                if (ROS2Serialization) AlignStream(writer, GetAlignment(fieldType));
 
                 if (fieldType == typeof(byte))
                 {
@@ -87,9 +94,9 @@ namespace ProBridge.Utils
             else
             {
                 var stringBytes = Encoding.UTF8.GetBytes(value);
-                writer.Write(stringBytes.Length + 1);
+                writer.Write(stringBytes.Length + (ROS2Serialization ? 1 : 0));
                 writer.Write(stringBytes);
-                writer.Write((byte)0);
+                if (ROS2Serialization) writer.Write((byte)0);
             }
         }
 
@@ -98,7 +105,7 @@ namespace ProBridge.Utils
             foreach (var item in array)
             {
                 Type itemType = item.GetType();
-                AlignStream(writer, GetAlignment(itemType));
+                if (ROS2Serialization) AlignStream(writer, GetAlignment(itemType));
 
                 if (itemType == typeof(byte))
                 {
@@ -204,7 +211,7 @@ namespace ProBridge.Utils
 
             foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
             {
-                AlignStream(reader, GetAlignment(field.FieldType));
+                if(ROS2Serialization) AlignStream(reader, GetAlignment(field.FieldType));
 
                 if (field.FieldType == typeof(byte))
                 {
@@ -256,10 +263,11 @@ namespace ProBridge.Utils
             {
                 return null;
             }
-            var str = Encoding.UTF8.GetString(reader.ReadBytes(length-1));
+
+            var str = Encoding.UTF8.GetString(reader.ReadBytes(length - (ROS2Serialization ? 1 : 0)));
             
             // Skip the null terminator
-            reader.ReadByte();
+            if(ROS2Serialization) reader.ReadByte();
             
             
             return str;
@@ -276,7 +284,7 @@ namespace ProBridge.Utils
 
             for (int i = 0; i < length; i++)
             {
-                AlignStream(reader, GetAlignment(elementType));
+                if(ROS2Serialization) AlignStream(reader, GetAlignment(elementType));
 
                 if (elementType == typeof(byte))
                 {
