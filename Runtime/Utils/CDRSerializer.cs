@@ -176,34 +176,6 @@ namespace ProBridge.Utils
             }
         }
         
-        public static object DeserializeMsg(byte[] data)
-        {
-            using (MemoryStream ms = new MemoryStream(data))
-            {
-                using (BinaryReader reader = new BinaryReader(ms))
-                {
-                    ProBridge.Msg msg = new ProBridge.Msg();
-                    
-                    msg.v = reader.ReadByte();
-                    
-                    msg.n = ReadString(reader);
-                    
-                    msg.t = ReadString(reader);
-
-#if ROS_V2
-                    msg.q = reader.ReadInt32();
-#endif
-
-
-                    var remainingBytes = ms.Length - ms.Position;
-                    msg.d = reader.ReadBytes((int)remainingBytes);
-                    
-
-                    return msg;
-                }
-            }
-            
-        }
         
         private static object DeserializeObject(BinaryReader reader, Type type)
         {
