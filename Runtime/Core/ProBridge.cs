@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.IO.Compression;
@@ -7,6 +8,7 @@ using System.Net.Sockets;
 using System.Threading;
 
 using Newtonsoft.Json;
+using ProBridge.Utils;
 
 namespace ProBridge
 {
@@ -27,6 +29,7 @@ namespace ProBridge
             /// Type of message
             /// </summary>
             public string t;
+            
 
 #if ROS_V2
             /// <summary>
@@ -34,6 +37,10 @@ namespace ProBridge
             /// </summary>
             public int q = 10;
 #endif
+            /// <summary>
+            /// Data Compression Level (0-9)
+            /// </summary>
+            public int c;
 
             /// <summary>
             /// Value of object
@@ -71,18 +78,47 @@ namespace ProBridge
         {
             if ((host is null) || (msg is null))
                 return;
-
-            var json = JsonConvert.SerializeObject(msg);
-            var data = ASCIIEncoding.ASCII.GetBytes(json);
-            byte[] buf = null;
-
+            
+            var dict = new Dictionary<string, object>();
+            dict["v"] = msg.v;
+            dict["t"] = msg.t;
+            dict["n"] = msg.n;
+#if ROS_V2
+            dict["q"] = msg.q;
+#endif
+            dict["c"] = msg.c;
+            
+            var json = JsonConvert.SerializeObject(dict);
+            var header = Encoding.ASCII.GetBytes(json);
+            
             using (var compressedStream = new MemoryStream())
-            using (var zipStream = new GZipStream(compressedStream, CompressionMode.Compress))
+            using (var zipStream = new GZipStream(compressedStream, CompressionLevel.Fastest))
             {
-                zipStream.Write(data, 0, data.Length);
+                zipStream.Write(header, 0, header.Length);
                 zipStream.Close();
-                buf = compressedStream.ToArray();
+                header = compressedStream.ToArray();
             }
+
+            byte[] rosMsg = CDRSerializer.Serialize(msg.d);
+
+            if (msg.c > 0)
+            {
+                using (var compressedStream = new MemoryStream())
+                using (var zipStream = new GZipStream(compressedStream, CompressionLevel.Fastest))
+                {
+                    zipStream.Write(rosMsg, 0, rosMsg.Length);
+                    zipStream.Close();
+                    rosMsg = compressedStream.ToArray();
+                }
+            }
+
+            short headerLen = (short)header.Length;
+            
+            byte[] buf = new byte[header.Length + sizeof(short) + rosMsg.Length];
+            Buffer.BlockCopy(BitConverter.GetBytes(headerLen), 0, buf, 0, sizeof(short));
+            Buffer.BlockCopy(header, 0, buf, sizeof(short), header.Length);
+            Buffer.BlockCopy(rosMsg, 0, buf, sizeof(short) + header.Length, rosMsg.Length);
+            
 
             if (buf.Length > MAX_UDP_SIZE)
                 Console.WriteLine($"Skipping large message of size {buf.Length} bytes.");
