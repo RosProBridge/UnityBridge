@@ -60,7 +60,7 @@ namespace ProBridge.Tx
                 var msg = GetMsg(ProBridgeServer.SimTime);
                 OnSendMessage?.Invoke(this, msg);
                 if (Bridge != null)
-                    Bridge.SendMsg(host, msg);
+                    Bridge.SendMsg(host.publisher, msg);
             }
         }
 

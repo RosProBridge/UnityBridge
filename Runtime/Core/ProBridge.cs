@@ -6,6 +6,8 @@ using System.IO.Compression;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using NetMQ;
+using NetMQ.Sockets;
 
 using Newtonsoft.Json;
 using ProBridge.Utils;
@@ -74,9 +76,9 @@ namespace ProBridge
             }
         }
 
-        public void SendMsg(ProBridgeHost host, Msg msg)
+        public void SendMsg(PublisherSocket publisher, Msg msg)
         {
-            if ((host is null) || (msg is null))
+            if ((publisher is null) || (msg is null))
                 return;
             
             var dict = new Dictionary<string, object>();
@@ -119,11 +121,7 @@ namespace ProBridge
             Buffer.BlockCopy(header, 0, buf, sizeof(short), header.Length);
             Buffer.BlockCopy(rosMsg, 0, buf, sizeof(short) + header.Length, rosMsg.Length);
             
-
-            if (buf.Length > MAX_UDP_SIZE)
-                Console.WriteLine($"Skipping large message of size {buf.Length} bytes.");
-            else
-                _send.Send(buf, buf.Length, new IPEndPoint(IPAddress.Parse(host.addr), host.port));
+            publisher.SendFrame(buf);
         }
 
         public void Receive()

@@ -105,7 +105,7 @@ namespace ProBridge.Tx.Tf
                     d = data
                 };
 
-                Bridge.SendMsg(host, msg);
+                Bridge.SendMsg(host.publisher, msg);
             }
         }
     }
