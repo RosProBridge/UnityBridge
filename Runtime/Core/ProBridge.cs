@@ -4,7 +4,6 @@ using System.Text;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
-using System.Net.Sockets;
 using System.Threading;
 using NetMQ;
 using NetMQ.Sockets;
@@ -53,24 +52,24 @@ namespace ProBridge
         public delegate void OnMessage(Msg msg);
         public OnMessage onMessageHandler = null;
 
+        
+        private int _port;
         private bool _active = true;
-        private UdpClient _recv = null;
-        private UdpClient _send = new UdpClient();
         private Thread _th = null;
 
 
         public ProBridge(int port = 47777)
         {
-            _recv = new UdpClient(port);
+            _port = port;
             (_th = new Thread(new ThreadStart(Receive))).Start();
         }
 
         public void Dispose()
         {
             _active = false;
+            NetMQConfig.Cleanup();
             if (_th != null)
             {
-                _recv?.Dispose();
                 if (_th.Join(1000))
                     _th?.Abort();
             }
@@ -126,33 +125,60 @@ namespace ProBridge
 
         public void Receive()
         {
+            SubscriberSocket _socket;
+            _socket = new SubscriberSocket();
+            _socket.Connect($"tcp://127.0.0.1:{_port}");
+            _socket.Subscribe("");
             while (_active)
             {
                 try
                 {
-                    IPEndPoint receivedIpEndPoint = null;
-                    var receivedBytes = _recv.Receive(ref receivedIpEndPoint);
+                    if (!_socket.TryReceiveFrameBytes(out var messageData)) continue;
 
-                    var n = 0;
-                    var buf = new byte[65535];
-                    using (var ms = new MemoryStream(receivedBytes))
-                    using (var gz = new GZipStream(ms, CompressionMode.Decompress))
-                        n = gz.Read(buf, 0, buf.Length);
+                    short n = BitConverter.ToInt16(messageData, 0);
+                    
+                    
 
-                    if (n <= 0)
-                        return;
+                    var headerBytes = new byte[n];
+                    Array.Copy(messageData, 2, headerBytes, 0, n);
 
-                    Array.Resize(ref buf, n);
-                    string json = Encoding.UTF8.GetString(buf);
-                    var msg = JsonConvert.DeserializeObject<Msg>(json);
+                    using (var compressedStream = new MemoryStream(headerBytes))
+                    using (var zipStream = new GZipStream(compressedStream, CompressionMode.Decompress))
+                    {
+                        var header = new byte[n];
+                        zipStream.Read(header, 0, n);
 
-                    onMessageHandler?.Invoke(msg);
+                        var msg = JsonConvert.DeserializeObject<Msg>(Encoding.UTF8.GetString(header));
+
+                        var rosMsg = new byte[messageData.Length - 2 - n];
+                        Array.Copy(messageData, 2 + n, rosMsg, 0, rosMsg.Length);
+                        
+
+                        if (msg.c > 0)
+                        {
+                            using (var subcompressedStream = new MemoryStream(rosMsg))
+                            using (var subzipStream = new GZipStream(subcompressedStream, CompressionMode.Decompress))
+                            {
+                                var decompressedBytes = new byte[msg.c];
+                                subzipStream.Read(decompressedBytes, 0, msg.c);
+                                msg.d = decompressedBytes;
+                            }
+                        }
+                        else
+                        {
+                            msg.d = rosMsg;
+                        }
+                        
+                        onMessageHandler?.Invoke(msg);
+                    }
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine(e.ToString());
                 }
             }
+            _socket.Close();
+            NetMQConfig.Cleanup();
         }
     }
 }
