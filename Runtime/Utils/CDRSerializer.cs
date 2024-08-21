@@ -22,10 +22,13 @@ namespace ProBridge.Utils
                 using (BinaryWriter writer = new BinaryWriter(ms))
                 {
                     // CDR Header
-                    writer.Write((byte)0x00);
-                    writer.Write((byte)0x01);
-                    writer.Write((byte)0x00);
-                    writer.Write((byte)0x00);
+                    if(ROS2Serialization)
+                    {
+                        writer.Write((byte)0x00);
+                        writer.Write((byte)0x01);
+                        writer.Write((byte)0x00);
+                        writer.Write((byte)0x00);
+                    }
                     
                     SerializeObject(writer, obj);
                 }
