@@ -23,8 +23,8 @@ namespace ProBridge
 
         private void OnDisable()
         {
-            publisher?.Dispose();
-            NetMQConfig.Cleanup(false); // SECRET INGREDIENT, DO NOT TOUCH
+            publisher.Close();
+            NetMQConfig.Cleanup(false);  // Must be here to work more than once, and false to not block when there are unprocessed messages.
         }
     }
 }

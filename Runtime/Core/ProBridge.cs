@@ -56,6 +56,7 @@ namespace ProBridge
         private int _port;
         private bool _active = true;
         private Thread _th = null;
+        private SubscriberSocket _socket;
 
 
         public ProBridge(int port = 47777)
@@ -67,7 +68,8 @@ namespace ProBridge
         public void Dispose()
         {
             _active = false;
-            NetMQConfig.Cleanup();
+            _socket.Close();
+            NetMQConfig.Cleanup(false); // Must be here to work more than once, and false to not block when there are unprocessed messages.
             if (_th != null)
             {
                 if (_th.Join(1000))
@@ -125,7 +127,6 @@ namespace ProBridge
 
         public void Receive()
         {
-            SubscriberSocket _socket;
             _socket = new SubscriberSocket();
             _socket.Connect($"tcp://127.0.0.1:{_port}");
             _socket.Subscribe("");
@@ -177,8 +178,6 @@ namespace ProBridge
                     Console.WriteLine(e.ToString());
                 }
             }
-            _socket.Close();
-            NetMQConfig.Cleanup();
         }
     }
 }
