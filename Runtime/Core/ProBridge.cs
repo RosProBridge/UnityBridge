@@ -7,7 +7,6 @@ using System.Net;
 using System.Threading;
 using NetMQ;
 using NetMQ.Sockets;
-
 using Newtonsoft.Json;
 using ProBridge.Utils;
 
@@ -30,7 +29,7 @@ namespace ProBridge
             /// Type of message
             /// </summary>
             public string t;
-            
+
 
 #if ROS_V2
             /// <summary>
@@ -50,10 +49,12 @@ namespace ProBridge
         }
 
         public delegate void OnMessage(Msg msg);
+
         public OnMessage onMessageHandler = null;
 
-        
+
         private int _port;
+        private string _ip = "127.0.0.1";
         private bool _active = true;
         private Thread _th = null;
         private SubscriberSocket _socket;
@@ -69,7 +70,8 @@ namespace ProBridge
         {
             _active = false;
             _socket.Close();
-            NetMQConfig.Cleanup(false); // Must be here to work more than once, and false to not block when there are unprocessed messages.
+            NetMQConfig.Cleanup(
+                false); // Must be here to work more than once, and false to not block when there are unprocessed messages.
             if (_th != null)
             {
                 if (_th.Join(1000))
@@ -79,104 +81,126 @@ namespace ProBridge
 
         public void SendMsg(PublisherSocket publisher, Msg msg)
         {
-            if ((publisher is null) || (msg is null))
-                return;
-            
-            var dict = new Dictionary<string, object>();
-            dict["v"] = msg.v;
-            dict["t"] = msg.t;
-            dict["n"] = msg.n;
-#if ROS_V2
-            dict["q"] = msg.q;
-#endif
-            dict["c"] = msg.c;
-            
-            var json = JsonConvert.SerializeObject(dict);
-            var header = Encoding.ASCII.GetBytes(json);
-            
-            using (var compressedStream = new MemoryStream())
-            using (var zipStream = new GZipStream(compressedStream, CompressionLevel.Fastest))
+            if (publisher == null || msg == null) return;
+
+            var messageData = new Dictionary<string, object>
             {
-                zipStream.Write(header, 0, header.Length);
-                zipStream.Close();
-                header = compressedStream.ToArray();
-            }
+                { "v", msg.v },
+                { "t", msg.t },
+                { "n", msg.n },
+#if ROS_V2
+                { "q", msg.q },
+#endif
+                { "c", msg.c }
+            };
+
+            var json = JsonConvert.SerializeObject(messageData);
+            var header = CompressData(json);
 
             byte[] rosMsg = CDRSerializer.Serialize(msg.d);
 
             if (msg.c > 0)
             {
-                using (var compressedStream = new MemoryStream())
-                using (var zipStream = new GZipStream(compressedStream, CompressionLevel.Fastest))
-                {
-                    zipStream.Write(rosMsg, 0, rosMsg.Length);
-                    zipStream.Close();
-                    rosMsg = compressedStream.ToArray();
-                }
+                rosMsg = CompressData(rosMsg, msg.c);
             }
 
-            short headerLen = (short)header.Length;
-            
-            byte[] buf = new byte[header.Length + sizeof(short) + rosMsg.Length];
-            Buffer.BlockCopy(BitConverter.GetBytes(headerLen), 0, buf, 0, sizeof(short));
+            var buf = new byte[sizeof(short) + header.Length + rosMsg.Length];
+            Buffer.BlockCopy(BitConverter.GetBytes((short)header.Length), 0, buf, 0, sizeof(short));
             Buffer.BlockCopy(header, 0, buf, sizeof(short), header.Length);
             Buffer.BlockCopy(rosMsg, 0, buf, sizeof(short) + header.Length, rosMsg.Length);
-            
+
             publisher.SendFrame(buf);
         }
 
-        public void Receive()
+        private byte[] CompressData(string data)
+        {
+            using (var compressedStream = new MemoryStream())
+            using (var zipStream = new GZipStream(compressedStream, CompressionLevel.Fastest))
+            {
+                var dataBytes = Encoding.ASCII.GetBytes(data);
+                zipStream.Write(dataBytes, 0, dataBytes.Length);
+                zipStream.Close();
+                return compressedStream.ToArray();
+            }
+        }
+
+        private byte[] CompressData(byte[] data, int compressionLevel = 1)
+        {
+            // TODO: use compressionLevel (current issue is that there is only 3 levels in GZipStream)
+            using (var compressedStream = new MemoryStream())
+            using (var zipStream = new GZipStream(compressedStream, CompressionLevel.Fastest))
+            {
+                zipStream.Write(data, 0, data.Length);
+                zipStream.Close();
+                return compressedStream.ToArray();
+            }
+        }
+
+        private void Receive()
         {
             _socket = new SubscriberSocket();
-            _socket.Connect($"tcp://127.0.0.1:{_port}");
+
+            _socket.Connect($"tcp://{_ip}:{_port}");
             _socket.Subscribe("");
+
             while (_active)
             {
                 try
                 {
-                    if (!_socket.TryReceiveFrameBytes(out var messageData)) continue;
+                    if (!_socket.TryReceiveFrameBytes(out var messageData))
+                        continue;
 
-                    short n = BitConverter.ToInt16(messageData, 0);
-                    
-                    
-
-                    var headerBytes = new byte[n];
-                    Array.Copy(messageData, 2, headerBytes, 0, n);
-
-                    using (var compressedStream = new MemoryStream(headerBytes))
-                    using (var zipStream = new GZipStream(compressedStream, CompressionMode.Decompress))
-                    {
-                        var header = new byte[n];
-                        zipStream.Read(header, 0, n);
-
-                        var msg = JsonConvert.DeserializeObject<Msg>(Encoding.UTF8.GetString(header));
-
-                        var rosMsg = new byte[messageData.Length - 2 - n];
-                        Array.Copy(messageData, 2 + n, rosMsg, 0, rosMsg.Length);
-                        
-
-                        if (msg.c > 0)
-                        {
-                            using (var subcompressedStream = new MemoryStream(rosMsg))
-                            using (var subzipStream = new GZipStream(subcompressedStream, CompressionMode.Decompress))
-                            {
-                                var decompressedBytes = new byte[msg.c];
-                                subzipStream.Read(decompressedBytes, 0, msg.c);
-                                msg.d = decompressedBytes;
-                            }
-                        }
-                        else
-                        {
-                            msg.d = rosMsg;
-                        }
-                        
-                        onMessageHandler?.Invoke(msg);
-                    }
+                    ProcessMessage(messageData);
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine(e.ToString());
                 }
+            }
+        }
+
+        private void ProcessMessage(byte[] messageData)
+        {
+            var headerSize = BitConverter.ToInt16(messageData, 0);
+            var headerBytes = new byte[headerSize];
+            Array.Copy(messageData, 2, headerBytes, 0, headerSize);
+
+            var msg = DeserializeMessage(headerBytes);
+            var rosMsg = GetROSMessage(messageData, headerSize);
+
+            msg.d = msg.c > 0 ? DecompressROSMessage(rosMsg, msg.c) : rosMsg;
+
+            onMessageHandler?.Invoke(msg);
+        }
+
+        private Msg DeserializeMessage(byte[] headerBytes)
+        {
+            using (var compressedStream = new MemoryStream(headerBytes))
+            using (var zipStream = new GZipStream(compressedStream, CompressionMode.Decompress))
+            {
+                var header = new byte[headerBytes.Length];
+                zipStream.Read(header, 0, header.Length);
+                return JsonConvert.DeserializeObject<Msg>(Encoding.UTF8.GetString(header));
+            }
+        }
+
+        private byte[] GetROSMessage(byte[] messageData, int headerSize)
+        {
+            var rosMsgSize = messageData.Length - 2 - headerSize;
+            var rosMsg = new byte[rosMsgSize];
+            Array.Copy(messageData, 2 + headerSize, rosMsg, 0, rosMsgSize);
+            return rosMsg;
+        }
+
+        private byte[] DecompressROSMessage(byte[] rosMsg, int compressionLevel = 1)
+        {
+            // TODO: use compressionLevel (current issue is that there is only 3 levels in GZipStream)
+            using (var subcompressedStream = new MemoryStream(rosMsg))
+            using (var subzipStream = new GZipStream(subcompressedStream, CompressionMode.Decompress))
+            {
+                var decompressedBytes = new byte[subzipStream.Length];
+                subzipStream.Read(decompressedBytes, 0, (int)subzipStream.Length);
+                return decompressedBytes;
             }
         }
     }
