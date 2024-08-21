@@ -8,10 +8,25 @@ Before you begin, ensure you have the following:
 
 - Git installed on your computer.
 - Unity Editor 2018.4 or later installed and ready to use.
+- [NuGetForUnity](https://github.com/GlitchEnzo/NuGetForUnity) Installed, Check their README for installation and usage guide.
 
 ## Installation Guide
 
-### 1. Accessing Package Manager in Unity
+### 1. Installing NetMQ through NuGetForUnity
+
+First we'll need to install NetMQ through NuGetForUnity:
+
+- Open the NuGetForUnity menu by clicking on  `NuGet` > `Manage NuGet Packages`
+
+![NuGetMenu](/Images/NFU%20menu.png)
+
+- Then search for `NetMQ` in the search box and select `NetMQ` from the results
+
+- Click on the `Install` button to install the package
+
+![NuGetSearch](/Images/NFU%20search.png)
+
+### 2. Accessing Package Manager in Unity
 
 Next, you need to open Unity and access the Package Manager:
 
@@ -20,7 +35,7 @@ Next, you need to open Unity and access the Package Manager:
 
 ![Package Manager Guide](Images/pm.png "Guide to Access Package Manager in Unity")
 
-### 2. Adding Package from git URL
+### 3. Adding Package from git URL
 
 Within the Package Manager:
 
@@ -29,7 +44,7 @@ Within the Package Manager:
 
 ![Package Manager Add](Images/pm_add.png "Add package from git URL")
 
-### 3. Verifying Installation
+### 4. Verifying Installation
 
 If the installation process was successful, you should now be able to see `ProBridge` listed among the installed packages in the Package Manager. This confirms the package is ready for use in your project.
 
