@@ -53,6 +53,18 @@ namespace ProBridge.Utils
                 {
                     writer.Write((byte)value);
                 }
+                else if (fieldType == typeof(sbyte))
+                {
+                    writer.Write((sbyte)value);
+                }
+                else if (fieldType == typeof(short))
+                {
+                    writer.Write((short)value);
+                }
+                else if (fieldType == typeof(ushort))
+                {
+                    writer.Write((ushort)value);
+                }
                 else if (fieldType == typeof(int))
                 {
                     writer.Write((int)value);
@@ -114,6 +126,18 @@ namespace ProBridge.Utils
                 {
                     writer.Write((byte)item);
                 }
+                else if (itemType == typeof(sbyte))
+                {
+                    writer.Write((sbyte)item);
+                }
+                else if (itemType == typeof(short))
+                {
+                    writer.Write((short)item);
+                }
+                else if (itemType == typeof(ushort))
+                {
+                    writer.Write((ushort)item);
+                }
                 else if (itemType == typeof(int))
                 {
                     writer.Write((int)item);
@@ -148,11 +172,14 @@ namespace ProBridge.Utils
         private static int GetAlignment(Type type)
         {
             if (type == typeof(byte)) return 1;
+            if (type == typeof(sbyte)) return 1;
+            if (type == typeof(short)) return 2;
+            if (type == typeof(ushort)) return 2;
             if (type == typeof(int)) return 4;
             if (type == typeof(uint)) return 4;
             if (type == typeof(float)) return 4;
             if (type == typeof(string)) return 4;
-            if (type == typeof(double)) return 4;
+            if (type == typeof(double)) return 8;
             if (type.IsClass) return 1; // Assuming classes don't need alignment
             throw new InvalidOperationException($"Unknown type for alignment: {type.Name}");
         }
@@ -191,6 +218,18 @@ namespace ProBridge.Utils
                 if (field.FieldType == typeof(byte))
                 {
                     field.SetValue(obj, reader.ReadByte());
+                }
+                else if (field.FieldType == typeof(sbyte))
+                {
+                    field.SetValue(obj, reader.ReadSByte());
+                }
+                else if (field.FieldType == typeof(short))
+                {
+                    field.SetValue(obj, reader.ReadInt16());
+                }
+                else if (field.FieldType == typeof(ushort))
+                {
+                    field.SetValue(obj, reader.ReadUInt16());
                 }
                 else if (field.FieldType == typeof(int))
                 {
@@ -264,6 +303,18 @@ namespace ProBridge.Utils
                 if (elementType == typeof(byte))
                 {
                     array.SetValue(reader.ReadByte(), i);
+                }
+                else if (elementType == typeof(sbyte))
+                {
+                    array.SetValue(reader.ReadSByte(), i);
+                }
+                else if (elementType == typeof(short))
+                {
+                    array.SetValue(reader.ReadInt16(), i);
+                }
+                else if (elementType == typeof(ushort))
+                {
+                    array.SetValue(reader.ReadUInt16(), i);
                 }
                 else if (elementType == typeof(int))
                 {
