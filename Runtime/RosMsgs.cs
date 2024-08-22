@@ -265,6 +265,40 @@ namespace ProBridge.ROS.Msgs.Sensors
         public Geometry.Vector3 linear_acceleration = new Geometry.Vector3();
         public double[] linear_acceleration_covariance = new double[9];
     }
+    
+    public class NavSatStatus : IRosMsg
+    {
+        // ROS Message Type
+        string IRosMsg.GetRosType() { return "sensor_msgs.msg.NavSatStatus"; }
+
+        // Constants for Status
+        public const sbyte STATUS_NO_FIX = -1;
+        public const sbyte STATUS_FIX = 0;
+        public const sbyte STATUS_SBAS_FIX = 1;
+        public const sbyte STATUS_GBAS_FIX = 2;
+
+        // Constants for Service
+        public const ushort SERVICE_GPS = 1;
+        public const ushort SERVICE_GLONASS = 2;
+        public const ushort SERVICE_COMPASS = 4;
+        public const ushort SERVICE_GALILEO = 8;
+
+        /// <summary>
+        /// Status of the GPS fix.
+        /// </summary>
+        public sbyte status;
+
+        /// <summary>
+        /// Which Global Navigation Satellite System (GNSS) is being used.
+        /// </summary>
+        public ushort service;
+
+        public NavSatStatus()
+        {
+            status = STATUS_NO_FIX;
+            service = SERVICE_GPS;
+        }
+    }
 
     public class NavSatFix : IRosMsg, IStamped
     {
@@ -276,7 +310,9 @@ namespace ProBridge.ROS.Msgs.Sensors
         public const byte COVARIANCE_TYPE_KNOWN = 3;
 
         public Header header { get; set; } = new Header();
-
+        
+        public NavSatStatus status = new NavSatStatus();
+        
         /// <summary>
         /// Latitude [degrees]. Positive is north of equator; negative is south
         /// </summary>
