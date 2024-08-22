@@ -187,6 +187,10 @@ namespace ProBridge.Utils
         private static void AlignStream(BinaryWriter writer, int alignment)
         {
             long position = writer.BaseStream.Position;
+            if (ROS2Serialization)
+            {
+                position -= 4; // To account for the CDR header
+            }
             long padding = (alignment - (position % alignment)) % alignment;
             for (int i = 0; i < padding; i++)
             {
@@ -352,6 +356,10 @@ namespace ProBridge.Utils
         private static void AlignStream(BinaryReader reader, int alignment)
         {
             long position = reader.BaseStream.Position;
+            if (ROS2Serialization)
+            {
+                position -= 4; // To account for the CDR header
+            }
             long padding = (alignment - (position % alignment)) % alignment;
             reader.BaseStream.Seek(padding, SeekOrigin.Current); // Skip padding bytes
         }
