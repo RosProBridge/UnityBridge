@@ -60,8 +60,9 @@ namespace ProBridge
         private SubscriberSocket _socket;
 
 
-        public ProBridge(int port = 47777)
+        public ProBridge(int port = 47777, string ip = "127.0.0.1")
         {
+            _ip = ip;
             _port = port;
             (_th = new Thread(new ThreadStart(Receive))).Start();
         }
