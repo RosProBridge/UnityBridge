@@ -207,15 +207,15 @@ namespace ProBridge.ROS.Msgs.Geometry
         string IRosMsg.GetRosType() { return "geometry_msgs.msg.PoseWithCovariance"; }
 
         public Pose pose = new Pose();
-        public float[] covariance = new float[36];
+        public double[] covariance = new double[36];
     }
 
     public class Twist : IRosMsg
     {
         string IRosMsg.GetRosType() { return "geometry_msgs.msg.Twist"; }
 
-        public Point linear = new Point();
-        public Point angular = new Point();
+        public Vector3 linear = new Vector3();
+        public Vector3 angular = new Vector3();
     }
 
     public class TwistStamped : IRosMsg, IStamped
@@ -231,7 +231,7 @@ namespace ProBridge.ROS.Msgs.Geometry
         string IRosMsg.GetRosType() { return "geometry_msgs.msg.TwistithCovariance"; }
 
         public Twist twist = new Twist();
-        public float[] covariance = new float[36];
+        public double[] covariance = new double[36];
     }
 
     public class Transform : IRosMsg
