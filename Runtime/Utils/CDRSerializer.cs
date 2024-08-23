@@ -87,7 +87,17 @@ namespace ProBridge.Utils
                 }
                 else if (fieldType.IsArray)
                 {
-                    WriteArray(writer, value as Array);
+                    Object tmpInstence = Activator.CreateInstance(type);
+                    Object arrayValue = field.GetValue(tmpInstence);
+                    if (arrayValue == null)
+                    {
+                        WriteArray(writer, value as Array, true);
+                    }
+                    else
+                    {
+                        WriteArray(writer, value as Array);
+                    }
+                    
                 }
                 else if (fieldType.IsClass && !fieldType.IsPrimitive) // Classes
                 {
@@ -115,8 +125,14 @@ namespace ProBridge.Utils
             }
         }
 
-        private static void WriteArray(BinaryWriter writer, Array array)
+        private static void WriteArray(BinaryWriter writer, Array array, bool addLength = false)
         {
+            if (addLength)
+            {
+                if (ROS2Serialization) AlignStream(writer, GetAlignment(typeof(int)));
+                writer.Write(array.Length);
+            }
+
             foreach (var item in array)
             {
                 Type itemType = item.GetType();
@@ -180,7 +196,7 @@ namespace ProBridge.Utils
             if (type == typeof(float)) return 4;
             if (type == typeof(string)) return 4;
             if (type == typeof(double)) return 8;
-            if (type.IsClass) return 1; // Assuming classes don't need alignment
+            if (type.IsClass) return 1; // Classes and arrays don't need alignment and align based on their contents
             throw new InvalidOperationException($"Unknown type for alignment: {type.Name}");
         }
 
@@ -258,7 +274,16 @@ namespace ProBridge.Utils
                 else if (field.FieldType.IsArray)
                 {
                     var arr = (Array)field.GetValue(obj);
-                    var arrLen = arr.Length;
+                    int arrLen;
+                    if (arr == null)
+                    {
+                        if(ROS2Serialization) AlignStream(reader, GetAlignment(typeof(int)));
+                        arrLen = reader.ReadInt32();
+                    }
+                    else
+                    {
+                        arrLen = arr.Length;
+                    }
                     field.SetValue(obj, ReadArray(reader, field.FieldType.GetElementType(), arrLen));
                 }
                 else if (field.FieldType.IsClass && !field.FieldType.IsPrimitive) // Classes
