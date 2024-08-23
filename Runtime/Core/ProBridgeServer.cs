@@ -44,7 +44,7 @@ namespace ProBridge
             }
         }
 
-        public void OnDisable()
+        public void OnDestroy()
         {
             if (Bridge != null)
             {
