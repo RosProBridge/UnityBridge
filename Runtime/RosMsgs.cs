@@ -118,15 +118,16 @@ namespace ProBridge.ROS.Msgs.Std
     }
 }
 
-namespace ProBridge.ROS.Msgs.Tf
+namespace ProBridge.ROS.Msgs.TF2
 {
-    public class tfMessage : IRosMsg
+    public class TFMessage : IRosMsg
     {
-        string IRosMsg.GetRosType() { return "tf.msg.tfMessage"; }
+        string IRosMsg.GetRosType() { return "tf2_msgs.msg.TFMessage"; }
 
         public Geometry.TransformStamped[] transforms;
     }
 }
+
 
 namespace ProBridge.ROS.Msgs.Rosgraph
 {
