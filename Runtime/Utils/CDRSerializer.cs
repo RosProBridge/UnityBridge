@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using UnityEngine;
+using Object = System.Object;
 
 namespace ProBridge.Utils
 {   
