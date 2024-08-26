@@ -104,11 +104,11 @@ namespace ProBridge.ROS.Msgs.Std
     {
         string IRosMsg.GetRosType() { return "std_msgs.msg.Header"; }
 
-        public Time stamp = new Time();
 #if ROS_V2
 #else
         public UInt32 seq;
 #endif
+        public Time stamp = new Time();
         public string frame_id;
     }
 
