@@ -1,4 +1,5 @@
 ﻿using System;
+using ProBridge.Utils;
 using UnityEngine;
 
 namespace ProBridge.Tx
@@ -9,10 +10,12 @@ namespace ProBridge.Tx
         public ProBridgeHost host;
         public float sendRate = 0.025f;
         public string topic = "";
-        [Range(0,9)]
+        [Range(0, 9)]
         public int compressionLevel = 0;
+
+
 #if ROS_V2
-        public int qos = 10;
+        public Qos qos;
 #endif
         #endregion
 
@@ -77,7 +80,7 @@ namespace ProBridge.Tx
                 t = data.GetRosType(),
                 c = compressionLevel,
 #if ROS_V2
-                q = qos,
+                q = qos.GetValue(),
 #endif
                 d = data
             };
