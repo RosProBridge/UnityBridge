@@ -1,61 +1,85 @@
-﻿using ProBridge.Utils;
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
+using ProBridge.Utils;
 
-[CustomEditor(typeof(Qos))]
-public class QosEditor : UnityEditor.Editor
+[CustomPropertyDrawer(typeof(Qos))]
+public class QosPropertyDrawer : PropertyDrawer
 {
-    SerializedProperty qosTypeProp;
-    SerializedProperty intQosProp;
-    SerializedProperty enumQosProp;
-    SerializedProperty reliabilityProp;
-    SerializedProperty historyProp;
-    SerializedProperty depthProp;
-    SerializedProperty durabilityProp;
-    SerializedProperty livelinessProp;
-
-    private void OnEnable()
+    public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
-        qosTypeProp = serializedObject.FindProperty("qosType");
-        intQosProp = serializedObject.FindProperty("intQos");
-        enumQosProp = serializedObject.FindProperty("enumQos");
-        reliabilityProp = serializedObject.FindProperty("reliability");
-        historyProp = serializedObject.FindProperty("history");
-        depthProp = serializedObject.FindProperty("depth");
-        durabilityProp = serializedObject.FindProperty("durability");
-        livelinessProp = serializedObject.FindProperty("liveliness");
-    }
+        // Begin property handling
+        EditorGUI.BeginProperty(position, label, property);
 
-    public override void OnInspectorGUI()
-    {
-        serializedObject.Update();
+        // Find the properties in the serialized class
+        SerializedProperty qosTypeProp = property.FindPropertyRelative("qosType");
+        SerializedProperty intQosProp = property.FindPropertyRelative("intQos");
+        SerializedProperty enumQosProp = property.FindPropertyRelative("enumQos");
+        SerializedProperty reliabilityProp = property.FindPropertyRelative("reliability");
+        SerializedProperty historyProp = property.FindPropertyRelative("history");
+        SerializedProperty depthProp = property.FindPropertyRelative("depth");
+        SerializedProperty durabilityProp = property.FindPropertyRelative("durability");
+        SerializedProperty livelinessProp = property.FindPropertyRelative("liveliness");
 
-        EditorGUILayout.PropertyField(qosTypeProp);
+        // Calculate the position of the fields
+        Rect fieldRect = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
+
+        // Draw the QOSType dropdown
+        EditorGUI.PropertyField(fieldRect, qosTypeProp);
+        fieldRect.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 
         Qos.QOSType qosType = (Qos.QOSType)qosTypeProp.enumValueIndex;
 
+        // Draw the fields based on the selected QOSType
         switch (qosType)
         {
             case Qos.QOSType.Int:
-                EditorGUILayout.PropertyField(intQosProp, new GUIContent("QOS Int"));
+                EditorGUI.PropertyField(fieldRect, intQosProp, new GUIContent("QOS Int"));
                 break;
 
             case Qos.QOSType.Enum:
-                EditorGUILayout.PropertyField(enumQosProp, new GUIContent("QOS Enum"));
+                EditorGUI.PropertyField(fieldRect, enumQosProp, new GUIContent("QOS Enum"));
                 break;
 
             case Qos.QOSType.Dict:
-                EditorGUILayout.LabelField("Dictionary Fields");
+                EditorGUI.LabelField(fieldRect, "Dictionary Fields");
+                fieldRect.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 
-                // Render the dictionary fields with appropriate dropdowns and input fields
-                EditorGUILayout.PropertyField(reliabilityProp, new GUIContent("Reliability"));
-                EditorGUILayout.PropertyField(historyProp, new GUIContent("History"));
-                EditorGUILayout.PropertyField(depthProp, new GUIContent("Depth"));
-                EditorGUILayout.PropertyField(durabilityProp, new GUIContent("Durability"));
-                EditorGUILayout.PropertyField(livelinessProp, new GUIContent("Liveliness"));
+                EditorGUI.PropertyField(fieldRect, reliabilityProp, new GUIContent("Reliability"));
+                fieldRect.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+                EditorGUI.PropertyField(fieldRect, historyProp, new GUIContent("History"));
+                fieldRect.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+                EditorGUI.PropertyField(fieldRect, depthProp, new GUIContent("Depth"));
+                fieldRect.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+                EditorGUI.PropertyField(fieldRect, durabilityProp, new GUIContent("Durability"));
+                fieldRect.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+                EditorGUI.PropertyField(fieldRect, livelinessProp, new GUIContent("Liveliness"));
                 break;
         }
 
-        serializedObject.ApplyModifiedProperties();
+        // End property handling
+        EditorGUI.EndProperty();
+    }
+
+    public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+    {
+        SerializedProperty qosTypeProp = property.FindPropertyRelative("qosType");
+        Qos.QOSType qosType = (Qos.QOSType)qosTypeProp.enumValueIndex;
+
+        int lines = 1; // QOSType dropdown
+
+        // Add lines based on the selected QOSType
+        switch (qosType)
+        {
+            case Qos.QOSType.Int:
+            case Qos.QOSType.Enum:
+                lines += 1;
+                break;
+
+            case Qos.QOSType.Dict:
+                lines += 6; // Label + 5 dictionary fields
+                break;
+        }
+
+        return EditorGUIUtility.singleLineHeight * lines + EditorGUIUtility.standardVerticalSpacing * (lines - 1);
     }
 }
