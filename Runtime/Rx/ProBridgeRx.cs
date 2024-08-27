@@ -1,3 +1,4 @@
+using ProBridge.Utils;
 using UnityEngine;
 
 namespace ProBridge.Rx
@@ -22,7 +23,7 @@ namespace ProBridge.Rx
             if (msg.n != topic)
                 return;
 
-            OnMessage(Newtonsoft.Json.JsonConvert.DeserializeObject<T>(msg.d.ToString()));
+            OnMessage(CDRSerializer.Deserialize<T>((byte[])msg.d));
         }
 
         private void Awake()

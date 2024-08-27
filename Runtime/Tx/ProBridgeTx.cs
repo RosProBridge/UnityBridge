@@ -9,6 +9,8 @@ namespace ProBridge.Tx
         public ProBridgeHost host;
         public float sendRate = 0.025f;
         public string topic = "";
+        [Range(0,9)]
+        public int compressionLevel = 0;
 #if ROS_V2
         public int qos = 10;
 #endif
@@ -58,7 +60,7 @@ namespace ProBridge.Tx
                 var msg = GetMsg(ProBridgeServer.SimTime);
                 OnSendMessage?.Invoke(this, msg);
                 if (Bridge != null)
-                    Bridge.SendMsg(host, msg);
+                    Bridge.SendMsg(host.publisher, msg);
             }
         }
 
@@ -73,6 +75,7 @@ namespace ProBridge.Tx
 #endif
                 n = topic,
                 t = data.GetRosType(),
+                c = compressionLevel,
 #if ROS_V2
                 q = qos,
 #endif

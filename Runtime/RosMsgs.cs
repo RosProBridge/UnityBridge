@@ -104,11 +104,11 @@ namespace ProBridge.ROS.Msgs.Std
     {
         string IRosMsg.GetRosType() { return "std_msgs.msg.Header"; }
 
-        public Time stamp = new Time();
 #if ROS_V2
 #else
         public UInt32 seq;
 #endif
+        public Time stamp = new Time();
         public string frame_id;
     }
 
@@ -118,15 +118,16 @@ namespace ProBridge.ROS.Msgs.Std
     }
 }
 
-namespace ProBridge.ROS.Msgs.Tf
+namespace ProBridge.ROS.Msgs.TF2
 {
-    public class tfMessage : IRosMsg
+    public class TFMessage : IRosMsg
     {
-        string IRosMsg.GetRosType() { return "tf.msg.tfMessage"; }
+        string IRosMsg.GetRosType() { return "tf2_msgs.msg.TFMessage"; }
 
         public Geometry.TransformStamped[] transforms;
     }
 }
+
 
 namespace ProBridge.ROS.Msgs.Rosgraph
 {
@@ -207,15 +208,15 @@ namespace ProBridge.ROS.Msgs.Geometry
         string IRosMsg.GetRosType() { return "geometry_msgs.msg.PoseWithCovariance"; }
 
         public Pose pose = new Pose();
-        public float[] covariance = new float[36];
+        public double[] covariance = new double[36];
     }
 
     public class Twist : IRosMsg
     {
         string IRosMsg.GetRosType() { return "geometry_msgs.msg.Twist"; }
 
-        public Point linear = new Point();
-        public Point angular = new Point();
+        public Vector3 linear = new Vector3();
+        public Vector3 angular = new Vector3();
     }
 
     public class TwistStamped : IRosMsg, IStamped
@@ -231,7 +232,7 @@ namespace ProBridge.ROS.Msgs.Geometry
         string IRosMsg.GetRosType() { return "geometry_msgs.msg.TwistithCovariance"; }
 
         public Twist twist = new Twist();
-        public float[] covariance = new float[36];
+        public double[] covariance = new double[36];
     }
 
     public class Transform : IRosMsg
@@ -265,6 +266,40 @@ namespace ProBridge.ROS.Msgs.Sensors
         public Geometry.Vector3 linear_acceleration = new Geometry.Vector3();
         public double[] linear_acceleration_covariance = new double[9];
     }
+    
+    public class NavSatStatus : IRosMsg
+    {
+        // ROS Message Type
+        string IRosMsg.GetRosType() { return "sensor_msgs.msg.NavSatStatus"; }
+
+        // Constants for Status
+        public const sbyte STATUS_NO_FIX = -1;
+        public const sbyte STATUS_FIX = 0;
+        public const sbyte STATUS_SBAS_FIX = 1;
+        public const sbyte STATUS_GBAS_FIX = 2;
+
+        // Constants for Service
+        public const ushort SERVICE_GPS = 1;
+        public const ushort SERVICE_GLONASS = 2;
+        public const ushort SERVICE_COMPASS = 4;
+        public const ushort SERVICE_GALILEO = 8;
+
+        /// <summary>
+        /// Status of the GPS fix.
+        /// </summary>
+        public sbyte status;
+
+        /// <summary>
+        /// Which Global Navigation Satellite System (GNSS) is being used.
+        /// </summary>
+        public ushort service;
+
+        public NavSatStatus()
+        {
+            status = STATUS_NO_FIX;
+            service = SERVICE_GPS;
+        }
+    }
 
     public class NavSatFix : IRosMsg, IStamped
     {
@@ -276,7 +311,9 @@ namespace ProBridge.ROS.Msgs.Sensors
         public const byte COVARIANCE_TYPE_KNOWN = 3;
 
         public Header header { get; set; } = new Header();
-
+        
+        public NavSatStatus status = new NavSatStatus();
+        
         /// <summary>
         /// Latitude [degrees]. Positive is north of equator; negative is south
         /// </summary>

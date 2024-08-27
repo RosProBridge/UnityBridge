@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using UnityEngine;
+using Object = System.Object;
 
 namespace ProBridge.Utils
 {   
@@ -22,10 +23,13 @@ namespace ProBridge.Utils
                 using (BinaryWriter writer = new BinaryWriter(ms))
                 {
                     // CDR Header
-                    writer.Write((byte)0x00);
-                    writer.Write((byte)0x01);
-                    writer.Write((byte)0x00);
-                    writer.Write((byte)0x00);
+                    if(ROS2Serialization)
+                    {
+                        writer.Write((byte)0x00);
+                        writer.Write((byte)0x01);
+                        writer.Write((byte)0x00);
+                        writer.Write((byte)0x00);
+                    }
                     
                     SerializeObject(writer, obj);
                 }
@@ -50,6 +54,18 @@ namespace ProBridge.Utils
                 {
                     writer.Write((byte)value);
                 }
+                else if (fieldType == typeof(sbyte))
+                {
+                    writer.Write((sbyte)value);
+                }
+                else if (fieldType == typeof(short))
+                {
+                    writer.Write((short)value);
+                }
+                else if (fieldType == typeof(ushort))
+                {
+                    writer.Write((ushort)value);
+                }
                 else if (fieldType == typeof(int))
                 {
                     writer.Write((int)value);
@@ -72,7 +88,17 @@ namespace ProBridge.Utils
                 }
                 else if (fieldType.IsArray)
                 {
-                    WriteArray(writer, value as Array);
+                    Object tmpInstence = Activator.CreateInstance(type);
+                    Object arrayValue = field.GetValue(tmpInstence);
+                    if (arrayValue == null)
+                    {
+                        WriteArray(writer, value as Array, true);
+                    }
+                    else
+                    {
+                        WriteArray(writer, value as Array);
+                    }
+                    
                 }
                 else if (fieldType.IsClass && !fieldType.IsPrimitive) // Classes
                 {
@@ -100,8 +126,14 @@ namespace ProBridge.Utils
             }
         }
 
-        private static void WriteArray(BinaryWriter writer, Array array)
+        private static void WriteArray(BinaryWriter writer, Array array, bool addLength = false)
         {
+            if (addLength)
+            {
+                if (ROS2Serialization) AlignStream(writer, GetAlignment(typeof(int)));
+                writer.Write(array.Length);
+            }
+
             foreach (var item in array)
             {
                 Type itemType = item.GetType();
@@ -110,6 +142,18 @@ namespace ProBridge.Utils
                 if (itemType == typeof(byte))
                 {
                     writer.Write((byte)item);
+                }
+                else if (itemType == typeof(sbyte))
+                {
+                    writer.Write((sbyte)item);
+                }
+                else if (itemType == typeof(short))
+                {
+                    writer.Write((short)item);
+                }
+                else if (itemType == typeof(ushort))
+                {
+                    writer.Write((ushort)item);
                 }
                 else if (itemType == typeof(int))
                 {
@@ -145,18 +189,25 @@ namespace ProBridge.Utils
         private static int GetAlignment(Type type)
         {
             if (type == typeof(byte)) return 1;
+            if (type == typeof(sbyte)) return 1;
+            if (type == typeof(short)) return 2;
+            if (type == typeof(ushort)) return 2;
             if (type == typeof(int)) return 4;
             if (type == typeof(uint)) return 4;
             if (type == typeof(float)) return 4;
             if (type == typeof(string)) return 4;
-            if (type == typeof(double)) return 4;
-            if (type.IsClass) return 1; // Assuming classes don't need alignment
+            if (type == typeof(double)) return 8;
+            if (type.IsClass) return 1; // Classes and arrays don't need alignment and align based on their contents
             throw new InvalidOperationException($"Unknown type for alignment: {type.Name}");
         }
 
         private static void AlignStream(BinaryWriter writer, int alignment)
         {
             long position = writer.BaseStream.Position;
+            if (ROS2Serialization)
+            {
+                position -= 4; // To account for the CDR header
+            }
             long padding = (alignment - (position % alignment)) % alignment;
             for (int i = 0; i < padding; i++)
             {
@@ -189,6 +240,18 @@ namespace ProBridge.Utils
                 {
                     field.SetValue(obj, reader.ReadByte());
                 }
+                else if (field.FieldType == typeof(sbyte))
+                {
+                    field.SetValue(obj, reader.ReadSByte());
+                }
+                else if (field.FieldType == typeof(short))
+                {
+                    field.SetValue(obj, reader.ReadInt16());
+                }
+                else if (field.FieldType == typeof(ushort))
+                {
+                    field.SetValue(obj, reader.ReadUInt16());
+                }
                 else if (field.FieldType == typeof(int))
                 {
                     field.SetValue(obj, reader.ReadInt32());
@@ -212,7 +275,16 @@ namespace ProBridge.Utils
                 else if (field.FieldType.IsArray)
                 {
                     var arr = (Array)field.GetValue(obj);
-                    var arrLen = arr.Length;
+                    int arrLen;
+                    if (arr == null)
+                    {
+                        if(ROS2Serialization) AlignStream(reader, GetAlignment(typeof(int)));
+                        arrLen = reader.ReadInt32();
+                    }
+                    else
+                    {
+                        arrLen = arr.Length;
+                    }
                     field.SetValue(obj, ReadArray(reader, field.FieldType.GetElementType(), arrLen));
                 }
                 else if (field.FieldType.IsClass && !field.FieldType.IsPrimitive) // Classes
@@ -262,6 +334,18 @@ namespace ProBridge.Utils
                 {
                     array.SetValue(reader.ReadByte(), i);
                 }
+                else if (elementType == typeof(sbyte))
+                {
+                    array.SetValue(reader.ReadSByte(), i);
+                }
+                else if (elementType == typeof(short))
+                {
+                    array.SetValue(reader.ReadInt16(), i);
+                }
+                else if (elementType == typeof(ushort))
+                {
+                    array.SetValue(reader.ReadUInt16(), i);
+                }
                 else if (elementType == typeof(int))
                 {
                     array.SetValue(reader.ReadInt32(), i);
@@ -298,6 +382,10 @@ namespace ProBridge.Utils
         private static void AlignStream(BinaryReader reader, int alignment)
         {
             long position = reader.BaseStream.Position;
+            if (ROS2Serialization)
+            {
+                position -= 4; // To account for the CDR header
+            }
             long padding = (alignment - (position % alignment)) % alignment;
             reader.BaseStream.Seek(padding, SeekOrigin.Current); // Skip padding bytes
         }

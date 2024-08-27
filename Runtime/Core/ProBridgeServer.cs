@@ -14,6 +14,7 @@ namespace ProBridge
         public class MsgEvent : UnityEvent<ProBridge.Msg> { }
 
         #region Inspector
+        public string ip = "127.0.0.1";
         public int port = 47777;
         public int queueBuffer = 100;
         #endregion
@@ -33,7 +34,7 @@ namespace ProBridge
             try
             {
                 _initTime = DateTime.Now.Ticks;
-                Bridge = new ProBridge(port);
+                Bridge = new ProBridge(port, ip);
                 Bridge.onMessageHandler += OnMsg;
             }
             catch (Exception ex)
@@ -43,7 +44,7 @@ namespace ProBridge
             }
         }
 
-        public void OnDisable()
+        public void OnDestroy()
         {
             if (Bridge != null)
             {

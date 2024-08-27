@@ -1,6 +1,7 @@
 ﻿using ProBridge.ROS.Msgs;
 using ProBridge.Utils;
 using System.Collections.Generic;
+using ProBridge.ROS.Msgs.TF2;
 using UnityEngine;
 
 namespace ProBridge.Tx.Tf
@@ -11,6 +12,8 @@ namespace ProBridge.Tx.Tf
         #region Inspector
         public ProBridgeHost host;
         public float sendRate = 0.1f;
+        [Range(0,9)]
+        public int compressionLevel = 0;
         #endregion
 
         public bool Active { get; set; } = true;
@@ -92,20 +95,26 @@ namespace ProBridge.Tx.Tf
 
             if (Active && Bridge != null)
             {
-                var data = new ROS.Msgs.Tf.tfMessage();
+                var data = new TFMessage();
                 data.transforms = GetTransforms();
 
                 var msg = new ProBridge.Msg()
                 {
+#if ROS_V2
+                    v = 2,
+#else
+                    v = 1,
+#endif
                     n = "/tf",
                     t = (data as IRosMsg).GetRosType(),
+                    c = compressionLevel,
 #if ROS_V2
                     q = 10,
 #endif
                     d = data
                 };
 
-                Bridge.SendMsg(host, msg);
+                Bridge.SendMsg(host.publisher, msg);
             }
         }
     }
