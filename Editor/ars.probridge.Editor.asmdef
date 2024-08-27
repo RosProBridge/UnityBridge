@@ -1,3 +1,4 @@
 {
-	"name": "ARS.ProBridge.Editor"
+	"name": "ARS.ProBridge.Editor",
+	"references":[ "GUID:52e0c9b0743eb4e409ccf123c160c71e" ]
 }
