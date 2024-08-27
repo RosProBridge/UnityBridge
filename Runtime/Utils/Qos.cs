@@ -1,8 +1,8 @@
 ﻿using System;
-using UnityEngine;
+using System.Collections.Generic;
 
-[CreateAssetMenu(fileName = "Qos", menuName = "ProBridge/Qos")]
-public class Qos : ScriptableObject
+[Serializable]
+public class Qos
 {
     public enum Reliability
     {
