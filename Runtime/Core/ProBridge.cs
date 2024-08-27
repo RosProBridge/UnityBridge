@@ -35,7 +35,7 @@ namespace ProBridge
             /// <summary>
             /// Quality od service, like as "qos_profile_system_default" or "qos_profile_sensor_data"
             /// </summary>
-            public int q = 10;
+            public object q = 10;
 #endif
             /// <summary>
             /// Data Compression Level (0-9)

@@ -15,6 +15,7 @@ namespace ProBridge.Tx
 
 
 #if ROS_V2
+        [Header("QOS")]
         public Qos qos;
 #endif
         #endregion
