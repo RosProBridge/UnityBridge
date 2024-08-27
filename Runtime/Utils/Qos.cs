@@ -66,7 +66,19 @@ public class Qos : ScriptableObject
 
     public object GetValue()
     {
-        // TODO: Implement return mechanism
+        if (qosType == QOSType.Int) return intQos;
+        if (qosType == QOSType.Enum) return enumQos.ToString();
+        if (qosType == QOSType.Dict)
+        {
+            Dictionary<string, object> dict = new Dictionary<string, object>();
+            dict["reliability"] = reliability.ToString();
+            dict["history"] = history.ToString();
+            dict["depth"] = depth;
+            dict["durability"] = durability.ToString();
+            dict["liveliness"] = liveliness.ToString();
+            return dict;
+        }
+        
         return null;
     }
 }
