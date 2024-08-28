@@ -1,4 +1,5 @@
-﻿using ProBridge.ROS.Msgs;
+﻿using System;
+using ProBridge.ROS.Msgs;
 using ProBridge.Utils;
 using System.Collections.Generic;
 using ProBridge.ROS.Msgs.TF2;
@@ -10,30 +11,40 @@ namespace ProBridge.Tx.Tf
     public class TfSender : ProBridgeSingletone<TfSender>
     {
         #region Inspector
+
         public ProBridgeHost host;
         public float sendRate = 0.1f;
-        [Range(0,9)]
-        public int compressionLevel = 0;
+        [Range(0, 9)] public int compressionLevel = 0;
+#if ROS_V2
+        [Header("Dynamic QOS")] public Qos dynamicQos;
+        [Header("Static QOS")] public Qos staticQos;
+#endif
+
         #endregion
 
         public bool Active { get; set; } = true;
 
-        private ProBridge Bridge { get { return ProBridgeServer.Instance?.Bridge; } }
+        private ProBridge Bridge;
 
         private long _lastSimTime = 0;
         private List<TfLink> _links = new List<TfLink>();
+        private ROS.Msgs.Geometry.TransformStamped[] staticTransforms;
 
         private void OnEnable()
         {
+            Bridge = ProBridgeServer.Instance.Bridge;
             if (Bridge == null)
             {
                 enabled = false;
-                Debug.LogWarning("Don't inited ROS bridge server.");
+                Debug.LogWarning("ROS bridge server not initialized.");
                 return;
             }
 
+            host.onSubscriberConnect += SendStaticMsg;
+            staticTransforms = GetTransforms(true);
+
             InvokeRepeating("UpdateTree", 0, 0.9f);
-            InvokeRepeating("SendMsg", 1, sendRate);
+            InvokeRepeating("SendDynamicMsg", 1, sendRate);
         }
 
         private void OnDisable()
@@ -50,7 +61,7 @@ namespace ProBridge.Tx.Tf
             }
         }
 
-        private ROS.Msgs.Geometry.TransformStamped[] GetTransforms()
+        private ROS.Msgs.Geometry.TransformStamped[] GetTransforms(bool staticTransforms = false)
         {
             var list = new List<ROS.Msgs.Geometry.TransformStamped>();
             var stamp = ProBridgeServer.SimTime;
@@ -58,7 +69,8 @@ namespace ProBridge.Tx.Tf
             {
                 foreach (var link in _links)
                 {
-                    if (link is null || !link.isActiveAndEnabled || link.frame_id == "")
+                    if (link is null || !link.isActiveAndEnabled || link.frame_id == "" ||
+                        (link.is_static != staticTransforms))
                         continue;
 
                     foreach (var child in link.children)
@@ -80,10 +92,22 @@ namespace ProBridge.Tx.Tf
                     }
                 }
             }
+
             return list.ToArray();
         }
 
-        protected void SendMsg()
+
+        protected void SendStaticMsg(object obj, EventArgs args)
+        {
+            SendMsg(true);
+        }
+
+        protected void SendDynamicMsg()
+        {
+            SendMsg();
+        }
+
+        protected void SendMsg(bool staticT = false)
         {
             var st = ProBridgeServer.SimTime.Ticks;
             if (_lastSimTime >= st)
@@ -91,12 +115,13 @@ namespace ProBridge.Tx.Tf
                 Debug.LogWarning("Can't send message before update SimTime.");
                 return;
             }
+
             _lastSimTime = st;
 
             if (Active && Bridge != null)
             {
                 var data = new TFMessage();
-                data.transforms = GetTransforms();
+                data.transforms = staticT ? staticTransforms : GetTransforms();
 
                 var msg = new ProBridge.Msg()
                 {
@@ -109,7 +134,7 @@ namespace ProBridge.Tx.Tf
                     t = (data as IRosMsg).GetRosType(),
                     c = compressionLevel,
 #if ROS_V2
-                    q = 10,
+                    q = staticT ? staticQos.GetValue() : dynamicQos.GetValue(),
 #endif
                     d = data
                 };
