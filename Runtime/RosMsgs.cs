@@ -250,10 +250,52 @@ namespace ProBridge.ROS.Msgs.Geometry
         public string child_frame_id;
         public Transform transform = new Transform();
     }
+    
 }
 
 namespace ProBridge.ROS.Msgs.Sensors
 {
+    public class PointField : IRosMsg
+    {
+        string IRosMsg.GetRosType() { return "sensor_msgs.msg.PointField"; }
+
+        // Constants for data types
+        public const byte INT8 = 1;
+        public const byte UINT8 = 2;
+        public const byte INT16 = 3;
+        public const byte UINT16 = 4;
+        public const byte INT32 = 5;
+        public const byte UINT32 = 6;
+        public const byte FLOAT32 = 7;
+        public const byte FLOAT64 = 8;
+
+        public string name;        // Name of the field
+        public uint offset;        // Offset from the start of the point struct
+        public byte datatype;      // Datatype of the field
+        public uint count;         // Number of elements in the field
+        
+    }
+    public class PointCloud2 : IRosMsg, IStamped
+    {
+        string IRosMsg.GetRosType() { return "sensor_msgs.msg.PointCloud2"; }
+
+        public Header header { get; set; } = new Header();
+
+        public uint height;               // Height of the point cloud data
+        public uint width;                // Width of the point cloud data
+
+        public PointField[] fields; // Array of PointField messages that describe the layout of the data
+        
+        public bool is_bigendian;         // Is this data bigendian?
+        public uint point_step;           // Length of a point in bytes
+        public uint row_step;             // Length of a row in bytes
+
+        public byte[] data; // Actual point cloud data, serialized as a byte array
+
+        public bool is_dense;             // Is this point cloud data dense?
+        
+        
+    }
     public class Imu : IRosMsg, IStamped
     {
         string IRosMsg.GetRosType() { return "sensor_msgs.msg.Imu"; }

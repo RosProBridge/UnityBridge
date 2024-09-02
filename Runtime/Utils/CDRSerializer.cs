@@ -50,7 +50,11 @@ namespace ProBridge.Utils
 
                 if (ROS2Serialization) AlignStream(writer, GetAlignment(fieldType));
 
-                if (fieldType == typeof(byte))
+                if (fieldType == typeof(bool))
+                {
+                    writer.Write((bool)value);
+                }
+                else if (fieldType == typeof(byte))
                 {
                     writer.Write((byte)value);
                 }
@@ -139,7 +143,11 @@ namespace ProBridge.Utils
                 Type itemType = item.GetType();
                 if (ROS2Serialization) AlignStream(writer, GetAlignment(itemType));
 
-                if (itemType == typeof(byte))
+                if (itemType == typeof(bool))
+                {
+                    writer.Write((bool)item);
+                }
+                else if (itemType == typeof(byte))
                 {
                     writer.Write((byte)item);
                 }
@@ -188,6 +196,7 @@ namespace ProBridge.Utils
 
         private static int GetAlignment(Type type)
         {
+            if (type == typeof(bool)) return 1;
             if (type == typeof(byte)) return 1;
             if (type == typeof(sbyte)) return 1;
             if (type == typeof(short)) return 2;
@@ -236,7 +245,11 @@ namespace ProBridge.Utils
             {
                 if(ROS2Serialization) AlignStream(reader, GetAlignment(field.FieldType));
 
-                if (field.FieldType == typeof(byte))
+                if (field.FieldType == typeof(bool))
+                {
+                    field.SetValue(obj, reader.ReadBoolean());
+                }
+                else if (field.FieldType == typeof(byte))
                 {
                     field.SetValue(obj, reader.ReadByte());
                 }
@@ -330,7 +343,11 @@ namespace ProBridge.Utils
             {
                 if(ROS2Serialization) AlignStream(reader, GetAlignment(elementType));
 
-                if (elementType == typeof(byte))
+                if (elementType == typeof(bool))
+                {
+                    array.SetValue(reader.ReadBoolean(), i);
+                }
+                else if (elementType == typeof(byte))
                 {
                     array.SetValue(reader.ReadByte(), i);
                 }
