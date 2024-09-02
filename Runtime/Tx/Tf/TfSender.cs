@@ -2,6 +2,7 @@
 using ProBridge.ROS.Msgs;
 using ProBridge.Utils;
 using System.Collections.Generic;
+using System.Threading;
 using ProBridge.ROS.Msgs.TF2;
 using UnityEngine;
 
@@ -15,6 +16,8 @@ namespace ProBridge.Tx.Tf
         public ProBridgeHost host;
         public float sendRate = 0.1f;
         [Range(0, 9)] public int compressionLevel = 0;
+        public string dynamicTopic = "/tf";
+        public string staticTopic = "/tf_static";
 #if ROS_V2
         [Header("Dynamic QOS")] public Qos dynamicQos;
         [Header("Static QOS")] public Qos staticQos;
@@ -30,7 +33,7 @@ namespace ProBridge.Tx.Tf
         private List<TfLink> _links = new List<TfLink>();
         private ROS.Msgs.Geometry.TransformStamped[] staticTransforms;
 
-        private void OnEnable()
+        private void Start()
         {
             Bridge = ProBridgeServer.Instance.Bridge;
             if (Bridge == null)
@@ -41,7 +44,8 @@ namespace ProBridge.Tx.Tf
             }
 
             host.onSubscriberConnect += SendStaticMsg;
-            staticTransforms = GetTransforms(true);
+            UpdateTree();
+            
 
             InvokeRepeating("UpdateTree", 0, 0.9f);
             InvokeRepeating("SendDynamicMsg", 1, sendRate);
@@ -59,6 +63,7 @@ namespace ProBridge.Tx.Tf
                 _links.Clear();
                 _links.AddRange(FindObjectsOfType<TfLink>());
             }
+            staticTransforms = GetTransforms(true);
         }
 
         private ROS.Msgs.Geometry.TransformStamped[] GetTransforms(bool staticTransforms = false)
@@ -99,6 +104,7 @@ namespace ProBridge.Tx.Tf
 
         protected void SendStaticMsg(object obj, EventArgs args)
         {
+            Thread.Sleep(300);
             SendMsg(true);
         }
 
@@ -110,13 +116,13 @@ namespace ProBridge.Tx.Tf
         protected void SendMsg(bool staticT = false)
         {
             var st = ProBridgeServer.SimTime.Ticks;
-            if (_lastSimTime >= st)
+            if (_lastSimTime >= st && !staticT)
             {
                 Debug.LogWarning("Can't send message before update SimTime.");
                 return;
             }
 
-            _lastSimTime = st;
+            if(!staticT) _lastSimTime = st;
 
             if (Active && Bridge != null)
             {
@@ -130,7 +136,7 @@ namespace ProBridge.Tx.Tf
 #else
                     v = 1,
 #endif
-                    n = "/tf",
+                    n = staticT? staticTopic : dynamicTopic,
                     t = (data as IRosMsg).GetRosType(),
                     c = compressionLevel,
 #if ROS_V2
