@@ -1,5 +1,41 @@
 # ProBridge Documentation
 
+<details>
+  <summary>Table of Contents</summary>
+
+- [ProBridge Documentation](#probridge-documentation)
+  - [Usage Guide](#usage-guide)
+    - [ProBridgeServer](#probridgeserver)
+    - [ProBridgeHost](#probridgehost)
+    - [Adding Publishers and Subscribers](#adding-publishers-and-subscribers)
+      - [Subscribers (Rx)](#subscribers-rx)
+      - [Publishers (Tx)](#publishers-tx)
+  - [Creating Custom Publishers](#creating-custom-publishers)
+    - [Understanding the Base Class Structure](#understanding-the-base-class-structure)
+    - [Defining the Custom Publisher Class](#defining-the-custom-publisher-class)
+    - [Handling Timestamps and Stamped Messages](#handling-timestamps-and-stamped-messages)
+    - [Examples](#examples)
+  - [Creating Custom Subscribers](#creating-custom-subscribers)
+    - [Understanding the Base Class Structure](#understanding-the-base-class-structure-1)
+    - [Defining the Custom Subscriber Class](#defining-the-custom-subscriber-class)
+    - [Assigning a Topic](#assigning-a-topic)
+    - [Example: Custom Clock Subscriber](#example-custom-clock-subscriber)
+  - [Creating New Message Classes](#creating-new-message-classes)
+    - [Overview](#overview)
+    - [Step-by-Step Guide](#step-by-step-guide)
+      - [Create a New Class](#1-create-a-new-class)
+      - [Implement the `GetRosType` Method](#2-implement-the-getrostype-method)
+      - [Define the Data Fields](#3-define-the-data-fields)
+      - [Handle Time Fields (if applicable)](#4-handle-time-fields-if-applicable)
+      - [Use Wrapper Classes for Complex Data Types](#5-use-wrapper-classes-for-complex-data-types)
+      - [Optional: Implement the `IStamped` Interface](#6-optional-implement-the-istamped-interface)
+      - [Add the Class to the Appropriate Namespace](#7-add-the-class-to-the-appropriate-namespace)
+    - [Example: Creating a New Message Class](#example-creating-a-new-message-class)
+    - [Quick Method for Creating New Messages](#quick-method-for-creating-new-messages)
+
+</details>
+
+
 
 ## Usage Guide
 
