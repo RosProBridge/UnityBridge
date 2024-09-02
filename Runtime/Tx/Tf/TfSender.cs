@@ -104,6 +104,11 @@ namespace ProBridge.Tx.Tf
 
         protected void SendStaticMsg(object obj, EventArgs args)
         {
+            /*
+             * At present, the only available event is ZMQ_EVENT_ACCEPTED. However, this event doesn't
+             * guarantee that the subscriber is ready to receive messages. As a workaround, we're using a delay (sleep) here.
+             * A more reliable solution would be to use ZMQ_EVENT_HANDSHAKE_SUCCEED, but this event is not yet available in NetMQ.
+             */
             Thread.Sleep(300);
             SendMsg(true);
         }
