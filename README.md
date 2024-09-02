@@ -49,3 +49,8 @@ Within the Package Manager:
 If the installation process was successful, you should now be able to see `ProBridge` listed among the installed packages in the Package Manager. This confirms the package is ready for use in your project.
 
 ![Package Folder](Images/packages_folder.png "Navigating to the ProBridge Package")
+
+
+## Documentation
+
+For usage details and how to create new custom publisher and subscribers check the [Documentation](/Documentation/probridge.md)
