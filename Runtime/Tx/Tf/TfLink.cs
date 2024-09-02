@@ -7,6 +7,7 @@ namespace ProBridge.Tx.Tf
     {
         public string frame_id = "";
         public bool fixed_frame;
+        public bool is_static = false;
         public TfLink[] children = new TfLink[0];
 
         public void Start()
