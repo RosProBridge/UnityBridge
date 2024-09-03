@@ -536,16 +536,15 @@ namespace ProBridge.ROS.Msgs.Chassis
 namespace ProBridge.ROS.Msgs.Ackermann
 {
     [Serializable]
-    public class AckermannDrive : IRosMsg, IStamped
+    public class AckermannDrive : IRosMsg
     {
         string IRosMsg.GetRosType() { return "ackermann_msgs.msg.AckermannDrive"; }
 
-        public Header header { get; set; } = new Header();
 
         public float steering_angle;                  // desired virtual angle (radians)
         public float steering_angle_velocity;         // desired rate of change (radians/s)
         public float speed;                           // desired forward speed (m/s)
-        public sbyte acceleration;                    // desired acceleration (m/s^2)
-        public sbyte jerk;                            // desired jerk (m/s^3)
+        public float acceleration;                    // desired acceleration (m/s^2)
+        public float jerk;                            // desired jerk (m/s^3)
     }
 }
