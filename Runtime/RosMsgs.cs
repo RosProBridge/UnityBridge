@@ -388,6 +388,43 @@ namespace ProBridge.ROS.Msgs.Sensors
         /// </summary>
         public byte position_covariance_type;
     }
+    public class Image : IRosMsg, IStamped
+    {
+        string IRosMsg.GetRosType() { return "sensor_msgs.msg.Image"; }
+
+        public Header header { get; set; } = new Header();
+
+        /// <summary>
+        /// Image height (number of rows)
+        /// </summary>
+        public uint height;
+
+        /// <summary>
+        /// Image width (number of columns)
+        /// </summary>
+        public uint width;
+
+        /// <summary>
+        /// Encoding type taken from the list of strings in include/sensor_msgs/image_encodings.hpp
+        /// </summary>
+        public string encoding;
+
+        /// <summary>
+        /// Is this data bigendian?
+        /// </summary>
+        public bool is_bigendian;
+
+        /// <summary>
+        /// Full row length in bytes
+        /// </summary>
+        public uint step;
+
+        /// <summary>
+        /// Actual image data, stored as a byte array
+        /// </summary>
+        public byte[] data;
+    }
+
 }
 
 namespace ProBridge.ROS.Msgs.Nav
