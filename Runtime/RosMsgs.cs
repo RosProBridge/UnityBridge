@@ -390,6 +390,93 @@ namespace ProBridge.ROS.Msgs.Sensors
     }
     
     
+    public class RegionOfInterest : IRosMsg
+    {
+        string IRosMsg.GetRosType() { return "sensor_msgs.msg.RegionOfInterest"; }
+
+
+        /// <summary>
+        /// Leftmost pixel of the ROI
+        /// </summary>
+        public uint x_offset;
+
+        /// <summary>
+        /// Topmost pixel of the ROI
+        /// </summary>
+        public uint y_offset;
+
+        /// <summary>
+        /// Height of ROI
+        /// </summary>
+        public uint height;
+
+        /// <summary>
+        /// Width of ROI
+        /// </summary>
+        public uint width;
+
+        /// <summary>
+        /// True if a subwindow is captured (ROI used)
+        /// </summary>
+        public bool do_rectify;
+    }
+    
+    public class CameraInfo : IRosMsg, IStamped
+    {
+        string IRosMsg.GetRosType() { return "sensor_msgs.msg.CameraInfo"; }
+        public Header header { get; set; } = new Header();
+
+        /// <summary>
+        /// Height of image
+        /// </summary>
+        public uint height;
+
+        /// <summary>
+        /// Width of image
+        /// </summary>
+        public uint width;
+
+        /// <summary>
+        /// Distortion model used
+        /// </summary>
+        public string distortion_model;
+
+        /// <summary>
+        /// Distortion coefficients
+        /// </summary>
+        public double[] d;
+
+        /// <summary>
+        /// Intrinsic camera matrix
+        /// </summary>
+        public double[] k = new double[9];
+
+        /// <summary>
+        /// Rectification matrix
+        /// </summary>
+        public double[] r = new double[9];
+
+        /// <summary>
+        /// Projection/camera matrix
+        /// </summary>
+        public double[] p = new double[12];
+
+        /// <summary>
+        /// X dimension camera pixel binning
+        /// </summary>
+        public uint binning_x;
+
+        /// <summary>
+        /// Y dimension camera pixel binning
+        /// </summary>
+        public uint binning_y;
+
+        /// <summary>
+        /// Region of interest
+        /// </summary>
+        public RegionOfInterest roi;
+    }
+    
     public class CompressedImage : IRosMsg, IStamped
     {
         string IRosMsg.GetRosType() { return "sensor_msgs.msg.CompressedImage"; }
