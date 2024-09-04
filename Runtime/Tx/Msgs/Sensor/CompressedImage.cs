@@ -25,12 +25,6 @@ namespace ProBridge.Tx.Sensor
         {
             InvokeRepeating("CallSnapShot", 0, sendRate);
         }
-        
-        
-        // protected override void OnStop()
-        // {
-        //     // Destruction logic, if needed
-        // }
 
         protected override ProBridge.Msg GetMsg(TimeSpan ts)
         {
@@ -52,16 +46,20 @@ namespace ProBridge.Tx.Sensor
 
         private void CallSnapShot()
         {
+
             StartCoroutine(TakeSnapshot());
         }
         
         public IEnumerator TakeSnapshot()
         {
             
-                yield return frameEnd;
-                tex = new Texture2D(renderTexture.width, renderTexture.height, TextureFormat.RGB24, false);
-                tex.ReadPixels(new Rect(0, 0, renderTexture.width, renderTexture.height), 0, 0);
-                gotFirstFrame = true;
+            yield return frameEnd;
+            RenderTexture.active = renderTexture;
+            tex = new Texture2D(renderTexture.width, renderTexture.height, TextureFormat.RGB24, false);
+            tex.ReadPixels(new Rect(0, 0, renderTexture.width, renderTexture.height), 0, 0);
+            gotFirstFrame = true;
+            
+            RenderTexture.active = null;
         }
     }
 }
