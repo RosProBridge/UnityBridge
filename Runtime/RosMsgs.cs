@@ -260,9 +260,6 @@ namespace ProBridge.ROS.Msgs.Geometry
     }
     public class PoseArray : IRosMsg, IStamped
     {
-        /// <summary>
-        /// An array of poses with a header for global reference.
-        /// </summary>
         string IRosMsg.GetRosType() { return "geometry_msgs.msg.PoseArray"; }
 
         public Header header { get; set; } = new Header();
@@ -514,14 +511,16 @@ namespace ProBridge.ROS.Msgs.Visualization
         /// Values should be in range: [0.0-1.0].
         /// </summary>
         public float u;
+
+        /// <summary>
+        /// Location of the pixel as a ratio of the width of a 2D texture.
+        /// Values should be in range: [0.0-1.0].
+        /// </summary>
         public float v;
 
     }
     public class MeshFile : IRosMsg
     {
-        /// <summary>
-        /// Used to send raw mesh files.
-        /// </summary>
         string IRosMsg.GetRosType() { return "visualization_msgs.msg.MeshFile"; }
 
         /// <summary>
