@@ -1,4 +1,18 @@
 {
-	"name": "ARS.ProBridge.Editor",
-	"references":[ "GUID:52e0c9b0743eb4e409ccf123c160c71e" ]
+    "name": "ARS.ProBridge.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:52e0c9b0743eb4e409ccf123c160c71e"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }
