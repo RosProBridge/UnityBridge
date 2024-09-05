@@ -26,6 +26,11 @@ First we'll need to install NetMQ through NuGetForUnity:
 
 ![NuGetSearch](/Images/NFU%20search.png)
 
+- After the installation, go to the Installed tab, expand the `Implicitly installed packages` drop down
+- Make sure you only have these 3 packages and **_uninstall_** anything else.
+
+![NugetInstalled](/Images/NFU%20installed.png)
+
 ### 2. Accessing Package Manager in Unity
 
 Next, you need to open Unity and access the Package Manager:
