@@ -526,6 +526,44 @@ namespace ProBridge.ROS.Msgs.Sensors
         public byte[] data;
     }
 
+    public class Image : IRosMsg, IStamped
+    {
+        string IRosMsg.GetRosType() { return "sensor_msgs.msg.Image"; }
+        public Header header { get; set; } = new Header();
+
+        /// <summary>
+        /// image height, that is, number of rows
+        /// </summary>
+        public uint height;
+
+        /// <summary>
+        /// image width, that is, number of columns
+        /// </summary>
+        public uint width;
+
+        /// <summary>
+        /// Encoding of pixels -- channel meaning, ordering, size
+        /// taken from the list of strings in include/sensor_msgs/image_encodings.hpp
+        /// Encoding type example: "rgb8", "bgr8", "mono8", "16UC1", "32FC1"
+        /// </summary>
+        public string encoding;
+
+        /// <summary>
+        /// is this data bigendian?
+        /// </summary>
+        public byte is_bigendian;
+
+        /// <summary>
+        /// Full row length in bytes
+        /// </summary>
+        public uint step;
+
+        /// <summary>
+        /// actual matrix data, size is (step * rows)
+        /// </summary>
+        public byte[] data;
+    }
+
 }
 
 namespace ProBridge.ROS.Msgs.Nav
