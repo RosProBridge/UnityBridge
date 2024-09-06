@@ -388,6 +388,38 @@ namespace ProBridge.ROS.Msgs.Sensors
         /// </summary>
         public byte position_covariance_type;
     }
+
+    public class RegionOfInterest : IRosMsg
+    {
+        string IRosMsg.GetRosType() { return "sensor_msgs.msg.RegionOfInterest"; }
+
+        /// <summary>
+        /// Leftmost pixel of the ROI.(0 if the ROI includes the left edge of the image)
+        /// <summary>
+        public uint x_offset;
+
+        /// <summary>
+        /// Topmost pixel of the ROI. (0 if the ROI includes the top edge of the image)
+        /// <summary>
+        public uint y_offset;         
+
+        /// <summary>
+        /// Height of ROI
+        /// <summary>
+        public uint height;
+
+        /// <summary>
+        /// Width of ROI
+        /// <summary>
+        public uint width;
+
+        /// <summary>
+        /// True if a distinct rectified ROI should be calculated from the "raw"
+        /// ROI in this message. Typically this should be False if the full image
+        /// is captured (ROI not used), and True if a subwindow is captured (ROI used).
+        /// <summary>
+        public bool do_rectify;      
+    }
 }
 
 namespace ProBridge.ROS.Msgs.Nav
