@@ -273,7 +273,7 @@ namespace ProBridge.ROS.Msgs.Sensors
         public uint offset;        // Offset from the start of the point struct
         public byte datatype;      // Datatype of the field
         public uint count;         // Number of elements in the field
-        
+
     }
     public class PointCloud2 : IRosMsg, IStamped
     {
@@ -285,7 +285,7 @@ namespace ProBridge.ROS.Msgs.Sensors
         public uint width;                // Width of the point cloud data
 
         public PointField[] fields; // Array of PointField messages that describe the layout of the data
-        
+
         public bool is_bigendian;         // Is this data bigendian?
         public uint point_step;           // Length of a point in bytes
         public uint row_step;             // Length of a row in bytes
@@ -293,8 +293,8 @@ namespace ProBridge.ROS.Msgs.Sensors
         public byte[] data; // Actual point cloud data, serialized as a byte array
 
         public bool is_dense;             // Is this point cloud data dense?
-        
-        
+
+
     }
     public class Imu : IRosMsg, IStamped
     {
@@ -308,7 +308,7 @@ namespace ProBridge.ROS.Msgs.Sensors
         public Geometry.Vector3 linear_acceleration = new Geometry.Vector3();
         public double[] linear_acceleration_covariance = new double[9];
     }
-    
+
     public class NavSatStatus : IRosMsg
     {
         // ROS Message Type
@@ -353,9 +353,9 @@ namespace ProBridge.ROS.Msgs.Sensors
         public const byte COVARIANCE_TYPE_KNOWN = 3;
 
         public Header header { get; set; } = new Header();
-        
+
         public NavSatStatus status = new NavSatStatus();
-        
+
         /// <summary>
         /// Latitude [degrees]. Positive is north of equator; negative is south
         /// </summary>
@@ -401,7 +401,7 @@ namespace ProBridge.ROS.Msgs.Sensors
         /// <summary>
         /// Topmost pixel of the ROI. (0 if the ROI includes the top edge of the image)
         /// <summary>
-        public uint y_offset;         
+        public uint y_offset;
 
         /// <summary>
         /// Height of ROI
@@ -418,7 +418,7 @@ namespace ProBridge.ROS.Msgs.Sensors
         /// ROI in this message. Typically this should be False if the full image
         /// is captured (ROI not used), and True if a subwindow is captured (ROI used).
         /// <summary>
-        public bool do_rectify;      
+        public bool do_rectify;
     }
 
     public class CameraInfo : IRosMsg, IStamped
@@ -525,6 +525,8 @@ namespace ProBridge.ROS.Msgs.Sensors
         /// </summary>
         public byte[] data;
     }
+
+}
 
 namespace ProBridge.ROS.Msgs.Nav
 {
