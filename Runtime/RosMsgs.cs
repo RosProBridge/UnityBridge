@@ -507,7 +507,24 @@ namespace ProBridge.ROS.Msgs.Sensors
         /// </summary>
         public RegionOfInterest roi;
     }
-}
+
+    public class CompressedImage : IRosMsg, IStamped
+    {
+        string IRosMsg.GetRosType() { return "sensor_msgs.msg.CompressedImage"; }
+        public Header header { get; set; } = new Header();
+
+        /// <summary>
+        /// Specifies the format of the data
+        /// Acceptable values:
+        /// jpeg, png
+        /// </summary>
+        public string format;
+
+        /// <summary>
+        /// Compressed image buffer
+        /// </summary>
+        public byte[] data;
+    }
 
 namespace ProBridge.ROS.Msgs.Nav
 {
