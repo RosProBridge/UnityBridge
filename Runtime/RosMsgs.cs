@@ -420,6 +420,93 @@ namespace ProBridge.ROS.Msgs.Sensors
         /// <summary>
         public bool do_rectify;      
     }
+
+    public class CameraInfo : IRosMsg, IStamped
+    {
+        string IRosMsg.GetRosType() { return "sensor_msgs.msg.CameraInfo"; }
+        public Header header { get; set; } = new Header();
+
+        /// <summary>
+        /// The image dimensions (height) with which the camera was calibrated. 
+        /// Normally this will be the full camera resolution in pixels.
+        /// <summary>
+        public uint height;
+
+        /// <summary>
+        /// The image dimensions (width) with which the camera was calibrated. 
+        /// Normally this will be the full camera resolution in pixels.
+        /// <summary>
+        public uint width;
+
+        /// <summary>
+        /// The distortion model used. Supported models are listed in
+        /// sensor_msgs/distortion_models.hpp. For most cameras, "plumb_bob" - a
+        /// simple model of radial and tangential distortion - is sufficent.
+        /// <summary>
+        public string distortion_model;
+
+        /// <summary>
+        /// The distortion parameters, size depending on the distortion model.
+        /// For "plumb_bob", the 5 parameters are: (k1, k2, t1, t2, k3).
+        /// </summary>
+        public double[] d;
+
+        /// <summary>
+        /// Intrinsic camera matrix for the raw (distorted) images.3x3 row-major matrix.
+        /// [fx 0 cx] 
+        /// K = [ 0 fy cy]
+        /// [ 0 0 1]
+        /// Projects 3D points in the camera coordinate frame to 2D pixel coordinates 
+        /// using the focal lengths (fx, fy) and principal point (cx, cy).
+        /// </summary>
+        public double[] k = new double[9];
+
+        /// <summary>
+        /// Rectification matrix (stereo cameras only). 3x3 row-major matrix.
+        /// A rotation matrix aligning the camera coordinate system to the ideal
+        /// stereo image plane so that epipolar lines in both stereo images are
+        /// parallel.
+        /// </summary>
+        public double[] r = new double[9];
+
+        /// <summary>
+        /// Projection/camera matrix. 3x4 row-major matrix.
+        /// [fx' 0 cx' Tx]
+        /// P = [ 0 fy' cy' Ty]
+        /// [ 0 0 1 0]
+        /// By convention, this matrix specifies the intrinsic (camera) matrix
+        /// of the processed (rectified) image.
+        /// </summary>
+        public double[] p = new double[12];
+
+        /// <summary>
+        /// Binning refers here to any camera setting which combines rectangular
+        /// neighborhoods of pixels into larger "super-pixels." It reduces the
+        /// resolution of the output image to
+        /// (width / binning_x) x (height / binning_y).
+        /// The default values binning_x = binning_y = 0 is considered the same
+        /// as binning_x = binning_y = 1 (no subsampling).
+        /// </summary>
+        public uint binning_x;
+
+        /// <summary>
+        /// Binning refers here to any camera setting which combines rectangular
+        /// neighborhoods of pixels into larger "super-pixels." It reduces the
+        /// resolution of the output image to
+        /// (width / binning_x) x (height / binning_y).
+        /// The default values binning_x = binning_y = 0 is considered the same
+        /// as binning_x = binning_y = 1 (no subsampling).
+        /// </summary>
+        public uint binning_y;
+
+        /// <summary>
+        /// Region of interest (subwindow of full camera resolution), given in
+        /// full resolution (unbinned) image coordinates. A particular ROI
+        /// always denotes the same window of pixels on the camera sensor,
+        /// regardless of binning settings.
+        /// </summary>
+        public RegionOfInterest roi;
+    }
 }
 
 namespace ProBridge.ROS.Msgs.Nav
