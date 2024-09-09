@@ -7,14 +7,6 @@ namespace ProBridge.ROS.Msgs
     {
         public string GetRosType();
     }
-    public class Duration : IRosMsg
-    {
-        string IRosMsg.GetRosType() { return "builtin_interfaces.msg.Duration"; }
-
-        public Int32 sec;
-        public uint nanosec;
-
-    }
 
 #if ROS_V2
     public class Time
@@ -32,6 +24,25 @@ namespace ProBridge.ROS.Msgs
         }
 
         public static implicit operator TimeSpan(Time value)
+        {
+            return new TimeSpan((long)((value.sec + 62135596800L) * TimeSpan.TicksPerSecond + (value.nanosec / 1e6 * TimeSpan.TicksPerMillisecond)));
+        }
+    }
+    public class Duration
+    {
+        public uint sec;
+        public uint nanosec;
+
+        public static implicit operator Duration(TimeSpan value)
+        {
+            return new Duration()
+            {
+                sec = (uint)(value.TotalSeconds - 62135596800L), // convert seconds into unix time
+                nanosec = (uint)((value.Ticks - ((long)value.TotalSeconds * TimeSpan.TicksPerSecond)) * (1e9d / TimeSpan.TicksPerSecond))
+            };
+        }
+
+        public static implicit operator TimeSpan(Duration value)
         {
             return new TimeSpan((long)((value.sec + 62135596800L) * TimeSpan.TicksPerSecond + (value.nanosec / 1e6 * TimeSpan.TicksPerMillisecond)));
         }
@@ -56,6 +67,25 @@ namespace ProBridge.ROS.Msgs
             return new TimeSpan((long)((value.secs + 62135596800L) * TimeSpan.TicksPerSecond + (value.nsecs / 1e6 * TimeSpan.TicksPerMillisecond)));
         }
     }
+      public class Duration
+    {
+        public uint secs;
+        public uint nsecs;
+
+        public static implicit operator Duration(TimeSpan value)
+        {
+            return new Duration()
+            {
+                secs = (uint)(value.TotalSeconds - 62135596800L), // convert seconds into unix time
+                nsecs = (uint)((value.Ticks - ((long)value.TotalSeconds * TimeSpan.TicksPerSecond)) * (1e9d / TimeSpan.TicksPerSecond))
+            };
+        }
+
+        public static implicit operator TimeSpan(Duration value)
+        {
+            return new TimeSpan((long)((value.secs + 62135596800L) * TimeSpan.TicksPerSecond + (value.nsecs / 1e6 * TimeSpan.TicksPerMillisecond)));
+        }
+    }
 #endif
 }
 
@@ -75,6 +105,15 @@ namespace ProBridge.ROS.Msgs.Std
         public StdTime(TimeSpan time)
         {
             data = time;
+        }
+    }
+    public class StdDuration : StdMsg<Duration>
+    {
+        public override string GetRosType() { return "std_msgs.msg.Duration"; }
+
+        public StdDuration(TimeSpan duration)
+        {
+            data = duration;
         }
     }
 
@@ -534,6 +573,7 @@ namespace ProBridge.ROS.Msgs.Visualization
         /// </summary>
         public byte[] data;
     }
+#if ROS_V2
     public class Marker : IRosMsg, IStamped
     {
         string IRosMsg.GetRosType() { return "visualization_msgs.msg.Marker"; }
@@ -658,7 +698,109 @@ namespace ProBridge.ROS.Msgs.Visualization
         public MeshFile mesh_file;
         public bool mesh_use_embedded_materials;
     }
+#else
+    public class Marker : IRosMsg, IStamped
+    {
+        string IRosMsg.GetRosType() { return "visualization_msgs.msg.Marker"; }
+        unit8
+        public const uint ARROW = 0;
+        public const uint CUBE = 1;
+        public const uint SPHERE = 2;
+        public const uint CYLINDER = 3;
+        public const uint LINE_STRIP = 4;
+        public const uint LINE_LIST = 5;
+        public const uint CUBE_LIST = 6;
+        public const uint SPHERE_LIST = 7;
+        public const uint POINTS = 8;
+        public const uint TEXT_VIEW_FACING = 9;
+        public const uint MESH_RESOURCE = 10;
+        public const uint TRIANGLE_LIST = 11;
+        public const uint ADD = 0;
+        public const uint MODIFY = 0;
+        public const uint DELETE = 2;
+        public const uint DELETEALL = 3;
 
+        /// <summary>
+        ///  Header for timestamp and frame id.
+        /// </summary>
+        public Header header { get; set; } = new Header();
+
+        /// <summary>
+        /// Namespace in which to place the object.
+        /// Used in conjunction with id to create a unique name for the object.
+        /// </summary>
+        public string ns;
+
+        /// <summary>
+        /// Object ID used in conjunction with the namespace for manipulating and deleting the object later.
+        /// </summary>
+        public Int32 id;
+
+        /// <summary>
+        /// Type of object.
+        /// </summary>
+        public Int32 type;
+
+        /// <summary>
+        /// Action to take; one of:
+        /// - 0 add/modify an object
+        /// - 1 (deprecated)
+        /// - 2 deletes an object (with the given ns and id)
+        /// - 3 deletes all objects (or those with the given ns if any)
+        /// </summary>
+        public Int32 action;
+
+        /// <summary>
+        /// Pose of the object with respect the frame_id specified in the header.
+        /// </summary>
+        public Geometry.Pose pose;
+
+        /// <summary>
+        /// Scale of the object; 1,1,1 means default (usually 1 meter square).
+        /// </summary>
+        public Geometry.Vector3 scale;
+
+        /// <summary>
+        /// Color of the object; in the range: [0.0-1.0]
+        /// </summary>
+        public ColorRGBA color;
+
+        /// <summary>
+        /// How long the object should last before being automatically deleted.
+        /// 0 indicates forever.
+        /// </summary>
+        public Duration lifetime;
+
+        /// <summary>
+        /// If this marker should be frame-locked, i.e. retransformed into its frame every timestep.
+        /// </summary>
+        public bool frame_locked;
+
+        /// <summary>
+        /// Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, ARROW_STRIP, etc.)
+        /// </summary>
+        public Geometry.Point[] points;
+
+        /// <summary>
+        /// Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+        /// The number of colors provided must either be 0 or equal to the number of points provided.
+        /// NOTE: alpha is not yet used
+        /// </summary>
+        public ColorRGBA[] colors;
+
+
+        /// <summary>
+        /// Only used for text markers
+        /// </summary>
+        public string text;
+
+        /// <summary>
+        /// only used for MESH_RESOURCE markers
+        /// </summary>
+        public string mesh_resource;
+        public bool mesh_use_embedded_materials;
+    }
+#endif
     public class MarkerArray : IRosMsg
     {
         string IRosMsg.GetRosType() { return "visualization_msgs.msg.MarkerArray"; }
