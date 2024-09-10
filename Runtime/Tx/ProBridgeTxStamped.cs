@@ -2,7 +2,7 @@ using System;
 
 namespace ProBridge.Tx
 {
-    public abstract class ProBridgeTxStamped<T> : ProBridgeTx<T> where T : ROS.Msgs.IRosMsg, ROS.Msgs.Std.IStamped, new()
+    public abstract class ProBridgeTxStamped<T> : ProBridgeTx<T> where T : std_msgs.IRosMsg, std_msgs.msg.IStamped, new()
     {
         public string frame_id = "";
 

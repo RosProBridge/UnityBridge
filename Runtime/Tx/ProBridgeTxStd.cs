@@ -1,6 +1,6 @@
 using System;
-using ProBridge.ROS.Msgs;
-using ProBridge.ROS.Msgs.Std;
+using std_msgs;
+using std_msgs.msg;
 
 namespace ProBridge.Tx.Std
 {
