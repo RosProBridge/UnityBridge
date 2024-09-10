@@ -383,7 +383,7 @@ namespace ProBridge.ROS.Msgs.Sensors
         public uint offset;        // Offset from the start of the point struct
         public byte datatype;      // Datatype of the field
         public uint count;         // Number of elements in the field
-        
+
     }
     public class PointCloud2 : IRosMsg, IStamped
     {
@@ -395,7 +395,7 @@ namespace ProBridge.ROS.Msgs.Sensors
         public uint width;                // Width of the point cloud data
 
         public PointField[] fields; // Array of PointField messages that describe the layout of the data
-        
+
         public bool is_bigendian;         // Is this data bigendian?
         public uint point_step;           // Length of a point in bytes
         public uint row_step;             // Length of a row in bytes
@@ -403,8 +403,8 @@ namespace ProBridge.ROS.Msgs.Sensors
         public byte[] data; // Actual point cloud data, serialized as a byte array
 
         public bool is_dense;             // Is this point cloud data dense?
-        
-        
+
+
     }
     public class Imu : IRosMsg, IStamped
     {
@@ -418,7 +418,7 @@ namespace ProBridge.ROS.Msgs.Sensors
         public Geometry.Vector3 linear_acceleration = new Geometry.Vector3();
         public double[] linear_acceleration_covariance = new double[9];
     }
-    
+
     public class NavSatStatus : IRosMsg
     {
         // ROS Message Type
@@ -463,9 +463,9 @@ namespace ProBridge.ROS.Msgs.Sensors
         public const byte COVARIANCE_TYPE_KNOWN = 3;
 
         public Header header { get; set; } = new Header();
-        
+
         public NavSatStatus status = new NavSatStatus();
-        
+
         /// <summary>
         /// Latitude [degrees]. Positive is north of equator; negative is south
         /// </summary>
@@ -499,6 +499,7 @@ namespace ProBridge.ROS.Msgs.Sensors
         public byte position_covariance_type;
     }
 
+
     public class CompressedImage : IRosMsg, IStamped
     {
         string IRosMsg.GetRosType() { return "sensor_msgs.msg.CompressedImage"; }
@@ -516,6 +517,164 @@ namespace ProBridge.ROS.Msgs.Sensors
         /// </summary>
         public byte[] data;
     }
+
+    public class RegionOfInterest : IRosMsg
+    {
+        string IRosMsg.GetRosType() { return "sensor_msgs.msg.RegionOfInterest"; }
+
+        /// <summary>
+        /// Leftmost pixel of the ROI.(0 if the ROI includes the left edge of the image)
+        /// <summary>
+        public uint x_offset;
+
+        /// <summary>
+        /// Topmost pixel of the ROI. (0 if the ROI includes the top edge of the image)
+        /// <summary>
+        public uint y_offset;
+
+        /// <summary>
+        /// Height of ROI
+        /// <summary>
+        public uint height;
+
+        /// <summary>
+        /// Width of ROI
+        /// <summary>
+        public uint width;
+
+        /// <summary>
+        /// True if a distinct rectified ROI should be calculated from the "raw"
+        /// ROI in this message. Typically this should be False if the full image
+        /// is captured (ROI not used), and True if a subwindow is captured (ROI used).
+        /// <summary>
+        public bool do_rectify;
+    }
+
+    public class CameraInfo : IRosMsg, IStamped
+    {
+        string IRosMsg.GetRosType() { return "sensor_msgs.msg.CameraInfo"; }
+        public Header header { get; set; } = new Header();
+
+        /// <summary>
+        /// The image dimensions (height) with which the camera was calibrated. 
+        /// Normally this will be the full camera resolution in pixels.
+        /// <summary>
+        public uint height;
+
+        /// <summary>
+        /// The image dimensions (width) with which the camera was calibrated. 
+        /// Normally this will be the full camera resolution in pixels.
+        /// <summary>
+        public uint width;
+
+        /// <summary>
+        /// The distortion model used. Supported models are listed in
+        /// sensor_msgs/distortion_models.hpp. For most cameras, "plumb_bob" - a
+        /// simple model of radial and tangential distortion - is sufficent.
+        /// <summary>
+        public string distortion_model;
+
+        /// <summary>
+        /// The distortion parameters, size depending on the distortion model.
+        /// For "plumb_bob", the 5 parameters are: (k1, k2, t1, t2, k3).
+        /// </summary>
+        public double[] d;
+
+        /// <summary>
+        /// Intrinsic camera matrix for the raw (distorted) images.3x3 row-major matrix.
+        /// [fx 0 cx] 
+        /// K = [ 0 fy cy]
+        /// [ 0 0 1]
+        /// Projects 3D points in the camera coordinate frame to 2D pixel coordinates 
+        /// using the focal lengths (fx, fy) and principal point (cx, cy).
+        /// </summary>
+        public double[] k = new double[9];
+
+        /// <summary>
+        /// Rectification matrix (stereo cameras only). 3x3 row-major matrix.
+        /// A rotation matrix aligning the camera coordinate system to the ideal
+        /// stereo image plane so that epipolar lines in both stereo images are
+        /// parallel.
+        /// </summary>
+        public double[] r = new double[9];
+
+        /// <summary>
+        /// Projection/camera matrix. 3x4 row-major matrix.
+        /// [fx' 0 cx' Tx]
+        /// P = [ 0 fy' cy' Ty]
+        /// [ 0 0 1 0]
+        /// By convention, this matrix specifies the intrinsic (camera) matrix
+        /// of the processed (rectified) image.
+        /// </summary>
+        public double[] p = new double[12];
+
+        /// <summary>
+        /// Binning refers here to any camera setting which combines rectangular
+        /// neighborhoods of pixels into larger "super-pixels." It reduces the
+        /// resolution of the output image to
+        /// (width / binning_x) x (height / binning_y).
+        /// The default values binning_x = binning_y = 0 is considered the same
+        /// as binning_x = binning_y = 1 (no subsampling).
+        /// </summary>
+        public uint binning_x;
+
+        /// <summary>
+        /// Binning refers here to any camera setting which combines rectangular
+        /// neighborhoods of pixels into larger "super-pixels." It reduces the
+        /// resolution of the output image to
+        /// (width / binning_x) x (height / binning_y).
+        /// The default values binning_x = binning_y = 0 is considered the same
+        /// as binning_x = binning_y = 1 (no subsampling).
+        /// </summary>
+        public uint binning_y;
+
+        /// <summary>
+        /// Region of interest (subwindow of full camera resolution), given in
+        /// full resolution (unbinned) image coordinates. A particular ROI
+        /// always denotes the same window of pixels on the camera sensor,
+        /// regardless of binning settings.
+        /// </summary>
+        public RegionOfInterest roi;
+    }
+
+    public class Image : IRosMsg, IStamped
+    {
+        string IRosMsg.GetRosType() { return "sensor_msgs.msg.Image"; }
+        public Header header { get; set; } = new Header();
+
+        /// <summary>
+        /// image height, that is, number of rows
+        /// </summary>
+        public uint height;
+
+        /// <summary>
+        /// image width, that is, number of columns
+        /// </summary>
+        public uint width;
+
+        /// <summary>
+        /// Encoding of pixels -- channel meaning, ordering, size
+        /// taken from the list of strings in include/sensor_msgs/image_encodings.hpp
+        /// Encoding type example: "rgb8", "bgr8", "mono8", "16UC1", "32FC1"
+        /// </summary>
+        public string encoding;
+
+        /// <summary>
+        /// is this data bigendian?
+        /// </summary>
+        public byte is_bigendian;
+
+        /// <summary>
+        /// Full row length in bytes
+        /// </summary>
+        public uint step;
+
+        /// <summary>
+        /// actual matrix data, size is (step * rows)
+        /// </summary>
+        public byte[] data;
+    }
+
 }
 
 namespace ProBridge.ROS.Msgs.Nav
@@ -818,22 +977,22 @@ namespace ProBridge.ROS.Msgs.Chassis
 
         public Header header { get; set; } = new Header();
 
-        public float battery;                           // Напряжение АКБ Вольт
-        public float fuel_available;                    // Запас топлива л
-        public float fuel_consumption;                  // Текущий (усредненный за мин) расход топлива л/ч
-        public sbyte engine_state;                      // Статус ДВС
-        public sbyte engine_temp;                       // Температура ДВС градус
-        public UInt16 engine_value;                     // Обороты ДВС об/мин
-        public sbyte transmission_state;                // Статус АКПП
-        public sbyte transmission_value;                // Значение передачи АКПП
-        public sbyte transmission_temp;                 // Температура АКПП градус
-        public sbyte transfer_value;                    // Значение раздаточной коробки
-        public sbyte main_brake_state;                  // Статус тормозной системы
-        public sbyte parking_brake_state;               // Статус парковочного тормоза
-        public sbyte rail_state;                        // Статус рулевой рейки
-        public sbyte[] parts_temp = new sbyte[0];       // Температура составных частей РТС градус
-        public sbyte[] general_state = new sbyte[0];    // Статусы датчиков, приборов освещения, индикаторы, и т.д.
-        public bool sto;                                // Разрешение движения
+        public float battery;                           // ГЌГ ГЇГ°ГїГ¦ГҐГ­ГЁГҐ ГЂГЉГЃ Г‚Г®Г«ГјГІ
+        public float fuel_available;                    // Г‡Г ГЇГ Г± ГІГ®ГЇГ«ГЁГўГ  Г«
+        public float fuel_consumption;                  // Г’ГҐГЄГіГ№ГЁГ© (ГіГ±Г°ГҐГ¤Г­ГҐГ­Г­Г»Г© Г§Г  Г¬ГЁГ­) Г°Г Г±ГµГ®Г¤ ГІГ®ГЇГ«ГЁГўГ  Г«/Г·
+        public sbyte engine_state;                      // Г‘ГІГ ГІГіГ± Г„Г‚Г‘
+        public sbyte engine_temp;                       // Г’ГҐГ¬ГЇГҐГ°Г ГІГіГ°Г  Г„Г‚Г‘ ГЈГ°Г Г¤ГіГ±
+        public UInt16 engine_value;                     // ГЋГЎГ®Г°Г®ГІГ» Г„Г‚Г‘ Г®ГЎ/Г¬ГЁГ­
+        public sbyte transmission_state;                // Г‘ГІГ ГІГіГ± ГЂГЉГЏГЏ
+        public sbyte transmission_value;                // Г‡Г­Г Г·ГҐГ­ГЁГҐ ГЇГҐГ°ГҐГ¤Г Г·ГЁ ГЂГЉГЏГЏ
+        public sbyte transmission_temp;                 // Г’ГҐГ¬ГЇГҐГ°Г ГІГіГ°Г  ГЂГЉГЏГЏ ГЈГ°Г Г¤ГіГ±
+        public sbyte transfer_value;                    // Г‡Г­Г Г·ГҐГ­ГЁГҐ Г°Г Г§Г¤Г ГІГ®Г·Г­Г®Г© ГЄГ®Г°Г®ГЎГЄГЁ
+        public sbyte main_brake_state;                  // Г‘ГІГ ГІГіГ± ГІГ®Г°Г¬Г®Г§Г­Г®Г© Г±ГЁГ±ГІГҐГ¬Г»
+        public sbyte parking_brake_state;               // Г‘ГІГ ГІГіГ± ГЇГ Г°ГЄГ®ГўГ®Г·Г­Г®ГЈГ® ГІГ®Г°Г¬Г®Г§Г 
+        public sbyte rail_state;                        // Г‘ГІГ ГІГіГ± Г°ГіГ«ГҐГўГ®Г© Г°ГҐГ©ГЄГЁ
+        public sbyte[] parts_temp = new sbyte[0];       // Г’ГҐГ¬ГЇГҐГ°Г ГІГіГ°Г  Г±Г®Г±ГІГ ГўГ­Г»Гµ Г·Г Г±ГІГҐГ© ГђГ’Г‘ ГЈГ°Г Г¤ГіГ±
+        public sbyte[] general_state = new sbyte[0];    // Г‘ГІГ ГІГіГ±Г» Г¤Г ГІГ·ГЁГЄГ®Гў, ГЇГ°ГЁГЎГ®Г°Г®Гў Г®Г±ГўГҐГ№ГҐГ­ГЁГї, ГЁГ­Г¤ГЁГЄГ ГІГ®Г°Г», ГЁ ГІ.Г¤.
+        public bool sto;                                // ГђГ Г§Г°ГҐГёГҐГ­ГЁГҐ Г¤ГўГЁГ¦ГҐГ­ГЁГї
     }
 
     [Serializable]
@@ -842,15 +1001,15 @@ namespace ProBridge.ROS.Msgs.Chassis
         string IRosMsg.GetRosType() { return "chassis_msgs.msg.ChassisFeed"; }
 
         public Header header { get; set; } = new Std.Header();
-        public float speed;                         // Показания датчика скорости [м/сек]
-        public Int16[] engine_value = new Int16[0]; // Обороты двигателя [об/мин]
-        public float[] rail_value = new float[0];   // Угол поворота рулевой рейки [радиан]
-        public float[] rail_speed = new float[0];   // Уголовая скорость рулевой рейки в [рад/сек]
-        public float[] rail_target = new float[0];  // Задание на рулевую рейку [усл. ед]
-        public float[] accel_value = new float[0];  // Положение педали газа [усл. ед]
-        public float[] accel_target = new float[0]; // Задание на педаль газа [усл. ед]
-        public float[] brake_value = new float[0];  // Значение датчика обратной связи по тормозной системе (отрицательное значение - код неисправности) [усл. ед]
-        public float[] brake_target = new float[0]; // Задание для тормозной системы [усл. ед]
+        public float speed;                         // ГЏГ®ГЄГ Г§Г Г­ГЁГї Г¤Г ГІГ·ГЁГЄГ  Г±ГЄГ®Г°Г®Г±ГІГЁ [Г¬/Г±ГҐГЄ]
+        public Int16[] engine_value = new Int16[0]; // ГЋГЎГ®Г°Г®ГІГ» Г¤ГўГЁГЈГ ГІГҐГ«Гї [Г®ГЎ/Г¬ГЁГ­]
+        public float[] rail_value = new float[0];   // Г“ГЈГ®Г« ГЇГ®ГўГ®Г°Г®ГІГ  Г°ГіГ«ГҐГўГ®Г© Г°ГҐГ©ГЄГЁ [Г°Г Г¤ГЁГ Г­]
+        public float[] rail_speed = new float[0];   // Г“ГЈГ®Г«Г®ГўГ Гї Г±ГЄГ®Г°Г®Г±ГІГј Г°ГіГ«ГҐГўГ®Г© Г°ГҐГ©ГЄГЁ Гў [Г°Г Г¤/Г±ГҐГЄ]
+        public float[] rail_target = new float[0];  // Г‡Г Г¤Г Г­ГЁГҐ Г­Г  Г°ГіГ«ГҐГўГіГѕ Г°ГҐГ©ГЄГі [ГіГ±Г«. ГҐГ¤]
+        public float[] accel_value = new float[0];  // ГЏГ®Г«Г®Г¦ГҐГ­ГЁГҐ ГЇГҐГ¤Г Г«ГЁ ГЈГ Г§Г  [ГіГ±Г«. ГҐГ¤]
+        public float[] accel_target = new float[0]; // Г‡Г Г¤Г Г­ГЁГҐ Г­Г  ГЇГҐГ¤Г Г«Гј ГЈГ Г§Г  [ГіГ±Г«. ГҐГ¤]
+        public float[] brake_value = new float[0];  // Г‡Г­Г Г·ГҐГ­ГЁГҐ Г¤Г ГІГ·ГЁГЄГ  Г®ГЎГ°Г ГІГ­Г®Г© Г±ГўГїГ§ГЁ ГЇГ® ГІГ®Г°Г¬Г®Г§Г­Г®Г© Г±ГЁГ±ГІГҐГ¬ГҐ (Г®ГІГ°ГЁГ¶Г ГІГҐГ«ГјГ­Г®ГҐ Г§Г­Г Г·ГҐГ­ГЁГҐ - ГЄГ®Г¤ Г­ГҐГЁГ±ГЇГ°Г ГўГ­Г®Г±ГІГЁ) [ГіГ±Г«. ГҐГ¤]
+        public float[] brake_target = new float[0]; // Г‡Г Г¤Г Г­ГЁГҐ Г¤Г«Гї ГІГ®Г°Г¬Г®Г§Г­Г®Г© Г±ГЁГ±ГІГҐГ¬Г» [ГіГ±Г«. ГҐГ¤]
     }
 
     [Serializable]
@@ -859,12 +1018,12 @@ namespace ProBridge.ROS.Msgs.Chassis
         string IRosMsg.GetRosType() { return "chassis_msgs.msg.ChassisSignals"; }
 
         public Header header { get; set; } = new Std.Header();
-        public bool lights_side;            // состояние габаритных огней
-        public bool lights_head;            // состояние фонарей головного света
-        public bool lights_left_turn;       // состояние левого указателя поворота
-        public bool lights_right_turn;      // состояние правого указателя поворота
-        public bool sound_signal;           // состояние звукового сигнала
-        public byte[] aux = new byte[0];     // состояние дополнительного сигнального оборудования
+        public bool lights_side;            // Г±Г®Г±ГІГ®ГїГ­ГЁГҐ ГЈГ ГЎГ Г°ГЁГІГ­Г»Гµ Г®ГЈГ­ГҐГ©
+        public bool lights_head;            // Г±Г®Г±ГІГ®ГїГ­ГЁГҐ ГґГ®Г­Г Г°ГҐГ© ГЈГ®Г«Г®ГўГ­Г®ГЈГ® Г±ГўГҐГІГ 
+        public bool lights_left_turn;       // Г±Г®Г±ГІГ®ГїГ­ГЁГҐ Г«ГҐГўГ®ГЈГ® ГіГЄГ Г§Г ГІГҐГ«Гї ГЇГ®ГўГ®Г°Г®ГІГ 
+        public bool lights_right_turn;      // Г±Г®Г±ГІГ®ГїГ­ГЁГҐ ГЇГ°Г ГўГ®ГЈГ® ГіГЄГ Г§Г ГІГҐГ«Гї ГЇГ®ГўГ®Г°Г®ГІГ 
+        public bool sound_signal;           // Г±Г®Г±ГІГ®ГїГ­ГЁГҐ Г§ГўГіГЄГ®ГўГ®ГЈГ® Г±ГЁГЈГ­Г Г«Г 
+        public byte[] aux = new byte[0];     // Г±Г®Г±ГІГ®ГїГ­ГЁГҐ Г¤Г®ГЇГ®Г«Г­ГЁГІГҐГ«ГјГ­Г®ГЈГ® Г±ГЁГЈГ­Г Г«ГјГ­Г®ГЈГ® Г®ГЎГ®Г°ГіГ¤Г®ГўГ Г­ГЁГї
     }
 
     [Serializable]
