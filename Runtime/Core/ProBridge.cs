@@ -14,8 +14,7 @@ namespace ProBridge
 {
     public class ProBridge : IDisposable
     {
-        private const uint MAX_UDP_SIZE = 65500;
-
+        private const int MAX_MSGS_PER_FRAME = 100;
         public class Msg
         {
             public byte v;
@@ -143,9 +142,15 @@ namespace ProBridge
 
         public void TryReceive()
         {
-            while(_socket.TryReceiveFrameBytes(out var messageData))
+            for (int i = 0; i < MAX_MSGS_PER_FRAME; i++)
+            {
+                if (!_socket.TryReceiveFrameBytes(out var messageData))
+                    break;
                 ProcessMessage(messageData);
+                
+            }
         }
+
 
         private void ProcessMessage(byte[] messageData)
         {
