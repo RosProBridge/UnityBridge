@@ -702,23 +702,23 @@ namespace ProBridge.ROS.Msgs.Visualization
     public class Marker : IRosMsg, IStamped
     {
         string IRosMsg.GetRosType() { return "visualization_msgs.msg.Marker"; }
-        unit8
-        public const uint ARROW = 0;
-        public const uint CUBE = 1;
-        public const uint SPHERE = 2;
-        public const uint CYLINDER = 3;
-        public const uint LINE_STRIP = 4;
-        public const uint LINE_LIST = 5;
-        public const uint CUBE_LIST = 6;
-        public const uint SPHERE_LIST = 7;
-        public const uint POINTS = 8;
-        public const uint TEXT_VIEW_FACING = 9;
-        public const uint MESH_RESOURCE = 10;
-        public const uint TRIANGLE_LIST = 11;
-        public const uint ADD = 0;
-        public const uint MODIFY = 0;
-        public const uint DELETE = 2;
-        public const uint DELETEALL = 3;
+     
+        public const byte ARROW = 0;
+        public const byte CUBE = 1;
+        public const byte SPHERE = 2;
+        public const byte CYLINDER = 3;
+        public const byte LINE_STRIP = 4;
+        public const byte LINE_LIST = 5;
+        public const byte CUBE_LIST = 6;
+        public const byte SPHERE_LIST = 7;
+        public const byte POINTS = 8;
+        public const byte TEXT_VIEW_FACING = 9;
+        public const byte MESH_RESOURCE = 10;
+        public const byte TRIANGLE_LIST = 11;
+        public const byte ADD = 0;
+        public const byte MODIFY = 0;
+        public const byte DELETE = 2;
+        public const byte DELETEALL = 3;
 
         /// <summary>
         ///  Header for timestamp and frame id.
