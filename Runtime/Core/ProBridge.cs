@@ -14,8 +14,7 @@ namespace ProBridge
 {
     public class ProBridge : IDisposable
     {
-        private const uint MAX_UDP_SIZE = 65500;
-
+        private const int MAX_MSGS_PER_FRAME = 100;
         public class Msg
         {
             public byte v;
@@ -64,13 +63,17 @@ namespace ProBridge
         {
             _ip = ip;
             _port = port;
-            (_th = new Thread(new ThreadStart(Receive))).Start();
+            
+            
+            _socket = new SubscriberSocket();
+            _socket.Connect($"tcp://{_ip}:{_port}");
+            _socket.Subscribe("");
         }
 
         public void Dispose()
         {
             _active = false;
-            _socket.Close();
+            // _socket.Close();
             NetMQConfig.Cleanup(
                 false); // Must be here to work more than once, and false to not block when there are unprocessed messages.
             if (_th != null)
@@ -137,28 +140,17 @@ namespace ProBridge
             }
         }
 
-        private void Receive()
+        public void TryReceive()
         {
-            _socket = new SubscriberSocket();
-
-            _socket.Connect($"tcp://{_ip}:{_port}");
-            _socket.Subscribe("");
-
-            while (_active)
+            for (int i = 0; i < MAX_MSGS_PER_FRAME; i++)
             {
-                try
-                {
-                    if (!_socket.TryReceiveFrameBytes(out var messageData))
-                        continue;
-
-                    ProcessMessage(messageData);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.ToString());
-                }
+                if (!_socket.TryReceiveFrameBytes(out var messageData))
+                    break;
+                ProcessMessage(messageData);
+                
             }
         }
+
 
         private void ProcessMessage(byte[] messageData)
         {

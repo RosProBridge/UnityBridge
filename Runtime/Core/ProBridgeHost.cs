@@ -27,19 +27,13 @@ namespace ProBridge
             publisher = new PublisherSocket();
             publisher.Bind($"tcp://{addr}:{port}");
             publisher.Options.Linger = new TimeSpan(0, 0, 1);
-
-            shouldStopMonitoring = false;
-            monitoringThread = new Thread(StartMonitoring);
-            monitoringThread.Start();
-        }
-
-        private void StartMonitoring()
-        {
+            
             monitor = new NetMQMonitor(publisher, $"inproc://monitor-{addr}:{port}", SocketEvents.All);
             monitor.Accepted += (s, e) => onSubscriberConnect?.Invoke(this, EventArgs.Empty);
 
-            monitor.Start();
+            monitor.StartAsync();
         }
+
 
         private void OnDisable()
         {
@@ -48,8 +42,6 @@ namespace ProBridge
 
             monitor.Stop();
             monitor?.Dispose();
-            if (monitoringThread != null && monitoringThread.Join(1000))
-                monitoringThread?.Abort();
         }
 
         private void OnDestroy()

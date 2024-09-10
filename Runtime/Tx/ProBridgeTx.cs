@@ -30,7 +30,7 @@ namespace ProBridge.Tx
 
         private long _lastSimTime = 0;
 
-        private void OnEnable()
+        private void Start()
         {
             if (Bridge == null)
             {
