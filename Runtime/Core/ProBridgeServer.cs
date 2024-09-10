@@ -29,7 +29,15 @@ namespace ProBridge
         private long _initTime;
 
 
-        public void OnEnable()
+        private void Awake()
+        {
+#if UNITY_EDITOR
+            QualitySettings.vSyncCount = 0;  // VSync must be disabled
+            Application.targetFrameRate = 45;
+#endif
+        }
+
+        public void Start()
         {
             try
             {
@@ -56,6 +64,8 @@ namespace ProBridge
         private void FixedUpdate()
         {
             SimTime = new TimeSpan(_initTime + (long)(Time.time * TimeSpan.TicksPerSecond));
+            
+            Bridge.TryReceive();
 
             while (_queue.Count > 0)
                 MessageEvent.Invoke(_queue.Dequeue());
