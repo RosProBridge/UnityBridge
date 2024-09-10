@@ -1,10 +1,12 @@
 ﻿using System;
-using ProBridge.ROS.Msgs;
 using ProBridge.Utils;
 using System.Collections.Generic;
 using System.Threading;
-using ProBridge.ROS.Msgs.TF2;
+using geometry_msgs.msg;
+using std_msgs;
+using tf2_msgs.msg;
 using UnityEngine;
+using Quaternion = UnityEngine.Quaternion;
 
 namespace ProBridge.Tx.Tf
 {
@@ -31,7 +33,7 @@ namespace ProBridge.Tx.Tf
 
         private long _lastSimTime = 0;
         private List<TfLink> _links = new List<TfLink>();
-        private ROS.Msgs.Geometry.TransformStamped[] staticTransforms;
+        private TransformStamped[] staticTransforms;
 
         private void Start()
         {
@@ -66,9 +68,9 @@ namespace ProBridge.Tx.Tf
             staticTransforms = GetTransforms(true);
         }
 
-        private ROS.Msgs.Geometry.TransformStamped[] GetTransforms(bool staticTransforms = false)
+        private TransformStamped[] GetTransforms(bool staticTransforms = false)
         {
-            var list = new List<ROS.Msgs.Geometry.TransformStamped>();
+            var list = new List<TransformStamped>();
             var stamp = ProBridgeServer.SimTime;
             lock (_links)
             {
@@ -86,7 +88,7 @@ namespace ProBridge.Tx.Tf
                         var localPosition = link.transform.InverseTransformPoint(child.transform.position);
                         var localRotation = Quaternion.Inverse(link.transform.rotation) * child.transform.rotation;
 
-                        var ts = new ROS.Msgs.Geometry.TransformStamped();
+                        var ts = new TransformStamped();
                         ts.header.stamp = stamp;
                         ts.header.frame_id = link.frame_id;
                         ts.child_frame_id = child.frame_id;

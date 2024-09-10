@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace ProBridge.Rx
 {
-    public abstract class ProBridgeRx<T> : MonoBehaviour where T : ROS.Msgs.IRosMsg, new()
+    public abstract class ProBridgeRx<T> : MonoBehaviour where T : std_msgs.IRosMsg, new()
     {
         public string topic = "";
 
