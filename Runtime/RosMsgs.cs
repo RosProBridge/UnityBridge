@@ -28,6 +28,25 @@ namespace ProBridge.ROS.Msgs
             return new TimeSpan((long)((value.sec + 62135596800L) * TimeSpan.TicksPerSecond + (value.nanosec / 1e6 * TimeSpan.TicksPerMillisecond)));
         }
     }
+    public class Duration
+    {
+        public uint sec;
+        public uint nanosec;
+
+        public static implicit operator Duration(TimeSpan value)
+        {
+            return new Duration()
+            {
+                sec = (uint)(value.TotalSeconds - 62135596800L), // convert seconds into unix time
+                nanosec = (uint)((value.Ticks - ((long)value.TotalSeconds * TimeSpan.TicksPerSecond)) * (1e9d / TimeSpan.TicksPerSecond))
+            };
+        }
+
+        public static implicit operator TimeSpan(Duration value)
+        {
+            return new TimeSpan((long)((value.sec + 62135596800L) * TimeSpan.TicksPerSecond + (value.nanosec / 1e6 * TimeSpan.TicksPerMillisecond)));
+        }
+    }
 #else
     public class Time
     {
@@ -44,6 +63,25 @@ namespace ProBridge.ROS.Msgs
         }
 
         public static implicit operator TimeSpan(Time value)
+        {
+            return new TimeSpan((long)((value.secs + 62135596800L) * TimeSpan.TicksPerSecond + (value.nsecs / 1e6 * TimeSpan.TicksPerMillisecond)));
+        }
+    }
+      public class Duration
+    {
+        public uint secs;
+        public uint nsecs;
+
+        public static implicit operator Duration(TimeSpan value)
+        {
+            return new Duration()
+            {
+                secs = (uint)(value.TotalSeconds - 62135596800L), // convert seconds into unix time
+                nsecs = (uint)((value.Ticks - ((long)value.TotalSeconds * TimeSpan.TicksPerSecond)) * (1e9d / TimeSpan.TicksPerSecond))
+            };
+        }
+
+        public static implicit operator TimeSpan(Duration value)
         {
             return new TimeSpan((long)((value.secs + 62135596800L) * TimeSpan.TicksPerSecond + (value.nsecs / 1e6 * TimeSpan.TicksPerMillisecond)));
         }
@@ -69,6 +107,15 @@ namespace ProBridge.ROS.Msgs.Std
             data = time;
         }
     }
+    public class StdDuration : StdMsg<Duration>
+    {
+        public override string GetRosType() { return "std_msgs.msg.Duration"; }
+
+        public StdDuration(TimeSpan duration)
+        {
+            data = duration;
+        }
+    }
 
     public class StdBool : StdMsg<bool>
     {
@@ -79,7 +126,10 @@ namespace ProBridge.ROS.Msgs.Std
     {
         public override string GetRosType() { return "std_msgs.msg.Float32"; }
     }
-
+    public class StdFloat64 : StdMsg<double>
+    {
+        public override string GetRosType() { return "std_msgs.msg.Float64"; }
+    }
     public class StdInt : StdMsg<int>
     {
         public override string GetRosType() { return "std_msgs.msg.Int32"; }
@@ -116,6 +166,59 @@ namespace ProBridge.ROS.Msgs.Std
     {
         Header header { get; }
     }
+    public class MultiArrayDimension : IRosMsg
+    {
+        string IRosMsg.GetRosType() { return "std_msgs.msg.MultiArrayDimension"; }
+
+        /// <summary>
+        /// label of given dimension
+        /// </summary>
+        public string label;
+
+        /// <summary>
+        /// size of given dimension (in type units)
+        /// </summary>
+        public UInt32 size;
+
+        /// <summary>
+        /// stride of given dimension
+        /// </summary>
+        public UInt32 stride;
+
+    }
+    public class MultiArrayLayout : IRosMsg
+    {
+        string IRosMsg.GetRosType() { return "std_msgs.msg.MultiArrayLayout"; }
+
+        /// <summary>
+        /// Array of dimension properties
+        /// </summary>
+        public MultiArrayDimension[] dim;
+
+        /// <summary>
+        /// padding elements at front of data
+        /// </summary>
+        public UInt32 data_offset;
+
+    }
+
+    public class StdFloat64MultiArray : IRosMsg
+    {
+
+        string IRosMsg.GetRosType() { return "std_msgs.msg.Float64MultiArray"; }
+
+        /// <summary>
+        /// specification of data layout
+        /// </summary>
+        public MultiArrayLayout layout;
+
+        /// <summary>
+        /// array of data
+        /// </summary>
+        public double[] data;
+
+    }
+
 }
 
 namespace ProBridge.ROS.Msgs.TF2
@@ -193,6 +296,13 @@ namespace ProBridge.ROS.Msgs.Geometry
 
         public Point position = new Point();
         public Quaternion orientation = new Quaternion() { w = 1 };
+    }
+    public class PoseArray : IRosMsg, IStamped
+    {
+        string IRosMsg.GetRosType() { return "geometry_msgs.msg.PoseArray"; }
+
+        public Header header { get; set; } = new Header();
+        public Pose[] poses;
     }
 
     public class PoseStamped : IRosMsg, IStamped
@@ -389,6 +499,25 @@ namespace ProBridge.ROS.Msgs.Sensors
         public byte position_covariance_type;
     }
 
+
+    public class CompressedImage : IRosMsg, IStamped
+    {
+        string IRosMsg.GetRosType() { return "sensor_msgs.msg.CompressedImage"; }
+        public Header header { get; set; } = new Header();
+
+        /// <summary>
+        /// Specifies the format of the data
+        /// Acceptable values:
+        /// jpeg, png
+        /// </summary>
+        public string format;
+
+        /// <summary>
+        /// Compressed image buffer
+        /// </summary>
+        public byte[] data;
+    }
+
     public class RegionOfInterest : IRosMsg
     {
         string IRosMsg.GetRosType() { return "sensor_msgs.msg.RegionOfInterest"; }
@@ -570,10 +699,169 @@ namespace ProBridge.ROS.Msgs.Nav
 
 namespace ProBridge.ROS.Msgs.Visualization
 {
+
+    public class UVCoordinate : IRosMsg
+    {
+        string IRosMsg.GetRosType() { return "visualization_msgs.msg.UVCoordinate"; }
+
+        /// <summary>
+        /// Location of the pixel as a ratio of the width of a 2D texture.
+        /// Values should be in range: [0.0-1.0].
+        /// </summary>
+        public float u;
+
+        /// <summary>
+        /// Location of the pixel as a ratio of the width of a 2D texture.
+        /// Values should be in range: [0.0-1.0].
+        /// </summary>
+        public float v;
+
+    }
+    public class MeshFile : IRosMsg
+    {
+        string IRosMsg.GetRosType() { return "visualization_msgs.msg.MeshFile"; }
+
+        /// <summary>
+        /// The filename is used for both debug purposes and to provide a file extension
+        /// for whatever parser is used.
+        /// </summary>
+        public string filename;
+
+        /// <summary>
+        /// This stores the raw text of the mesh file.
+        /// </summary>
+        public byte[] data;
+    }
+#if ROS_V2
     public class Marker : IRosMsg, IStamped
     {
         string IRosMsg.GetRosType() { return "visualization_msgs.msg.Marker"; }
 
+        public const Int32 ARROW = 0;
+        public const Int32 CUBE = 1;
+        public const Int32 SPHERE = 2;
+        public const Int32 CYLINDER = 3;
+        public const Int32 LINE_STRIP = 4;
+        public const Int32 LINE_LIST = 5;
+        public const Int32 CUBE_LIST = 6;
+        public const Int32 SPHERE_LIST = 7;
+        public const Int32 POINTS = 8;
+        public const Int32 TEXT_VIEW_FACING = 9;
+        public const Int32 MESH_RESOURCE = 10;
+        public const Int32 TRIANGLE_LIST = 11;
+        public const Int32 ADD = 0;
+        public const Int32 MODIFY = 0;
+        public const Int32 DELETE = 2;
+        public const Int32 DELETEALL = 3;
+
+        /// <summary>
+        ///  Header for timestamp and frame id.
+        /// </summary>
+        public Header header { get; set; } = new Header();
+
+        /// <summary>
+        /// Namespace in which to place the object.
+        /// Used in conjunction with id to create a unique name for the object.
+        /// </summary>
+        public string ns;
+
+        /// <summary>
+        /// Object ID used in conjunction with the namespace for manipulating and deleting the object later.
+        /// </summary>
+        public Int32 id;
+
+        /// <summary>
+        /// Type of object.
+        /// </summary>
+        public Int32 type;
+
+        /// <summary>
+        /// Action to take; one of:
+        /// - 0 add/modify an object
+        /// - 1 (deprecated)
+        /// - 2 deletes an object (with the given ns and id)
+        /// - 3 deletes all objects (or those with the given ns if any)
+        /// </summary>
+        public Int32 action;
+
+        /// <summary>
+        /// Pose of the object with respect the frame_id specified in the header.
+        /// </summary>
+        public Geometry.Pose pose;
+
+        /// <summary>
+        /// Scale of the object; 1,1,1 means default (usually 1 meter square).
+        /// </summary>
+        public Geometry.Vector3 scale;
+
+        /// <summary>
+        /// Color of the object; in the range: [0.0-1.0]
+        /// </summary>
+        public ColorRGBA color;
+
+        /// <summary>
+        /// How long the object should last before being automatically deleted.
+        /// 0 indicates forever.
+        /// </summary>
+        public Duration lifetime;
+
+        /// <summary>
+        /// If this marker should be frame-locked, i.e. retransformed into its frame every timestep.
+        /// </summary>
+        public bool frame_locked;
+
+        /// <summary>
+        /// Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, ARROW_STRIP, etc.)
+        /// </summary>
+        public Geometry.Point[] points;
+
+        /// <summary>
+        /// Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+        /// The number of colors provided must either be 0 or equal to the number of points provided.
+        /// NOTE: alpha is not yet used
+        /// </summary>
+        public ColorRGBA[] colors;
+
+        /// <summary>
+        /// Texture resource is a special URI that can either reference a texture file in
+        /// a format acceptable to (resource retriever)[https://docs.ros.org/en/rolling/p/resource_retriever/]
+        /// or an embedded texture via a string matching the format:
+        /// "embedded://texture_name"
+        /// </summary>
+        public string texture_resource;
+
+        /// <summary>
+        /// An image to be loaded into the rendering engine as the texture for this marker.
+        /// This will be used iff texture_resource is set to embedded.
+        /// </summary>
+        public Sensors.CompressedImage texture;
+
+        /// <summary>
+        /// Location of each vertex within the texture; in the range: [0.0-1.0]
+        /// </summary>
+        public UVCoordinate[] uv_coordinates;
+
+        /// <summary>
+        /// Only used for text markers
+        /// </summary>
+        public string text;
+
+        /// <summary>
+        /// Only used for MESH_RESOURCE markers.
+        /// Similar to texture_resource, mesh_resource uses resource retriever to load a mesh.
+        /// Optionally, a mesh file can be sent in-message via the mesh_file field. If doing so,
+        /// use the following format for mesh_resource:
+        ///   "embedded://mesh_name"
+        /// </summary>
+        public string mesh_resource;
+        public MeshFile mesh_file;
+        public bool mesh_use_embedded_materials;
+    }
+#else
+    public class Marker : IRosMsg, IStamped
+    {
+        string IRosMsg.GetRosType() { return "visualization_msgs.msg.Marker"; }
+     
         public const byte ARROW = 0;
         public const byte CUBE = 1;
         public const byte SPHERE = 2;
@@ -591,23 +879,87 @@ namespace ProBridge.ROS.Msgs.Visualization
         public const byte DELETE = 2;
         public const byte DELETEALL = 3;
 
+        /// <summary>
+        ///  Header for timestamp and frame id.
+        /// </summary>
         public Header header { get; set; } = new Header();
+
+        /// <summary>
+        /// Namespace in which to place the object.
+        /// Used in conjunction with id to create a unique name for the object.
+        /// </summary>
         public string ns;
+
+        /// <summary>
+        /// Object ID used in conjunction with the namespace for manipulating and deleting the object later.
+        /// </summary>
         public Int32 id;
+
+        /// <summary>
+        /// Type of object.
+        /// </summary>
         public Int32 type;
+
+        /// <summary>
+        /// Action to take; one of:
+        /// - 0 add/modify an object
+        /// - 1 (deprecated)
+        /// - 2 deletes an object (with the given ns and id)
+        /// - 3 deletes all objects (or those with the given ns if any)
+        /// </summary>
         public Int32 action;
+
+        /// <summary>
+        /// Pose of the object with respect the frame_id specified in the header.
+        /// </summary>
         public Geometry.Pose pose;
+
+        /// <summary>
+        /// Scale of the object; 1,1,1 means default (usually 1 meter square).
+        /// </summary>
         public Geometry.Vector3 scale;
+
+        /// <summary>
+        /// Color of the object; in the range: [0.0-1.0]
+        /// </summary>
         public ColorRGBA color;
-        public Time lifetime;
+
+        /// <summary>
+        /// How long the object should last before being automatically deleted.
+        /// 0 indicates forever.
+        /// </summary>
+        public Duration lifetime;
+
+        /// <summary>
+        /// If this marker should be frame-locked, i.e. retransformed into its frame every timestep.
+        /// </summary>
         public bool frame_locked;
+
+        /// <summary>
+        /// Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, ARROW_STRIP, etc.)
+        /// </summary>
         public Geometry.Point[] points;
+
+        /// <summary>
+        /// Only used if the type specified has some use for them (eg. POINTS, LINE_STRIP, etc.)
+        /// The number of colors provided must either be 0 or equal to the number of points provided.
+        /// NOTE: alpha is not yet used
+        /// </summary>
         public ColorRGBA[] colors;
+
+
+        /// <summary>
+        /// Only used for text markers
+        /// </summary>
         public string text;
+
+        /// <summary>
+        /// only used for MESH_RESOURCE markers
+        /// </summary>
         public string mesh_resource;
         public bool mesh_use_embedded_materials;
     }
-
+#endif
     public class MarkerArray : IRosMsg
     {
         string IRosMsg.GetRosType() { return "visualization_msgs.msg.MarkerArray"; }
@@ -625,22 +977,22 @@ namespace ProBridge.ROS.Msgs.Chassis
 
         public Header header { get; set; } = new Header();
 
-        public float battery;                           // Напряжение АКБ Вольт
-        public float fuel_available;                    // Запас топлива л
-        public float fuel_consumption;                  // Текущий (усредненный за мин) расход топлива л/ч
-        public sbyte engine_state;                      // Статус ДВС
-        public sbyte engine_temp;                       // Температура ДВС градус
-        public UInt16 engine_value;                     // Обороты ДВС об/мин
-        public sbyte transmission_state;                // Статус АКПП
-        public sbyte transmission_value;                // Значение передачи АКПП
-        public sbyte transmission_temp;                 // Температура АКПП градус
-        public sbyte transfer_value;                    // Значение раздаточной коробки
-        public sbyte main_brake_state;                  // Статус тормозной системы
-        public sbyte parking_brake_state;               // Статус парковочного тормоза
-        public sbyte rail_state;                        // Статус рулевой рейки
-        public sbyte[] parts_temp = new sbyte[0];       // Температура составных частей РТС градус
-        public sbyte[] general_state = new sbyte[0];    // Статусы датчиков, приборов освещения, индикаторы, и т.д.
-        public bool sto;                                // Разрешение движения
+        public float battery;                           // ГЌГ ГЇГ°ГїГ¦ГҐГ­ГЁГҐ ГЂГЉГЃ Г‚Г®Г«ГјГІ
+        public float fuel_available;                    // Г‡Г ГЇГ Г± ГІГ®ГЇГ«ГЁГўГ  Г«
+        public float fuel_consumption;                  // Г’ГҐГЄГіГ№ГЁГ© (ГіГ±Г°ГҐГ¤Г­ГҐГ­Г­Г»Г© Г§Г  Г¬ГЁГ­) Г°Г Г±ГµГ®Г¤ ГІГ®ГЇГ«ГЁГўГ  Г«/Г·
+        public sbyte engine_state;                      // Г‘ГІГ ГІГіГ± Г„Г‚Г‘
+        public sbyte engine_temp;                       // Г’ГҐГ¬ГЇГҐГ°Г ГІГіГ°Г  Г„Г‚Г‘ ГЈГ°Г Г¤ГіГ±
+        public UInt16 engine_value;                     // ГЋГЎГ®Г°Г®ГІГ» Г„Г‚Г‘ Г®ГЎ/Г¬ГЁГ­
+        public sbyte transmission_state;                // Г‘ГІГ ГІГіГ± ГЂГЉГЏГЏ
+        public sbyte transmission_value;                // Г‡Г­Г Г·ГҐГ­ГЁГҐ ГЇГҐГ°ГҐГ¤Г Г·ГЁ ГЂГЉГЏГЏ
+        public sbyte transmission_temp;                 // Г’ГҐГ¬ГЇГҐГ°Г ГІГіГ°Г  ГЂГЉГЏГЏ ГЈГ°Г Г¤ГіГ±
+        public sbyte transfer_value;                    // Г‡Г­Г Г·ГҐГ­ГЁГҐ Г°Г Г§Г¤Г ГІГ®Г·Г­Г®Г© ГЄГ®Г°Г®ГЎГЄГЁ
+        public sbyte main_brake_state;                  // Г‘ГІГ ГІГіГ± ГІГ®Г°Г¬Г®Г§Г­Г®Г© Г±ГЁГ±ГІГҐГ¬Г»
+        public sbyte parking_brake_state;               // Г‘ГІГ ГІГіГ± ГЇГ Г°ГЄГ®ГўГ®Г·Г­Г®ГЈГ® ГІГ®Г°Г¬Г®Г§Г 
+        public sbyte rail_state;                        // Г‘ГІГ ГІГіГ± Г°ГіГ«ГҐГўГ®Г© Г°ГҐГ©ГЄГЁ
+        public sbyte[] parts_temp = new sbyte[0];       // Г’ГҐГ¬ГЇГҐГ°Г ГІГіГ°Г  Г±Г®Г±ГІГ ГўГ­Г»Гµ Г·Г Г±ГІГҐГ© ГђГ’Г‘ ГЈГ°Г Г¤ГіГ±
+        public sbyte[] general_state = new sbyte[0];    // Г‘ГІГ ГІГіГ±Г» Г¤Г ГІГ·ГЁГЄГ®Гў, ГЇГ°ГЁГЎГ®Г°Г®Гў Г®Г±ГўГҐГ№ГҐГ­ГЁГї, ГЁГ­Г¤ГЁГЄГ ГІГ®Г°Г», ГЁ ГІ.Г¤.
+        public bool sto;                                // ГђГ Г§Г°ГҐГёГҐГ­ГЁГҐ Г¤ГўГЁГ¦ГҐГ­ГЁГї
     }
 
     [Serializable]
@@ -649,15 +1001,15 @@ namespace ProBridge.ROS.Msgs.Chassis
         string IRosMsg.GetRosType() { return "chassis_msgs.msg.ChassisFeed"; }
 
         public Header header { get; set; } = new Std.Header();
-        public float speed;                         // Показания датчика скорости [м/сек]
-        public Int16[] engine_value = new Int16[0]; // Обороты двигателя [об/мин]
-        public float[] rail_value = new float[0];   // Угол поворота рулевой рейки [радиан]
-        public float[] rail_speed = new float[0];   // Уголовая скорость рулевой рейки в [рад/сек]
-        public float[] rail_target = new float[0];  // Задание на рулевую рейку [усл. ед]
-        public float[] accel_value = new float[0];  // Положение педали газа [усл. ед]
-        public float[] accel_target = new float[0]; // Задание на педаль газа [усл. ед]
-        public float[] brake_value = new float[0];  // Значение датчика обратной связи по тормозной системе (отрицательное значение - код неисправности) [усл. ед]
-        public float[] brake_target = new float[0]; // Задание для тормозной системы [усл. ед]
+        public float speed;                         // ГЏГ®ГЄГ Г§Г Г­ГЁГї Г¤Г ГІГ·ГЁГЄГ  Г±ГЄГ®Г°Г®Г±ГІГЁ [Г¬/Г±ГҐГЄ]
+        public Int16[] engine_value = new Int16[0]; // ГЋГЎГ®Г°Г®ГІГ» Г¤ГўГЁГЈГ ГІГҐГ«Гї [Г®ГЎ/Г¬ГЁГ­]
+        public float[] rail_value = new float[0];   // Г“ГЈГ®Г« ГЇГ®ГўГ®Г°Г®ГІГ  Г°ГіГ«ГҐГўГ®Г© Г°ГҐГ©ГЄГЁ [Г°Г Г¤ГЁГ Г­]
+        public float[] rail_speed = new float[0];   // Г“ГЈГ®Г«Г®ГўГ Гї Г±ГЄГ®Г°Г®Г±ГІГј Г°ГіГ«ГҐГўГ®Г© Г°ГҐГ©ГЄГЁ Гў [Г°Г Г¤/Г±ГҐГЄ]
+        public float[] rail_target = new float[0];  // Г‡Г Г¤Г Г­ГЁГҐ Г­Г  Г°ГіГ«ГҐГўГіГѕ Г°ГҐГ©ГЄГі [ГіГ±Г«. ГҐГ¤]
+        public float[] accel_value = new float[0];  // ГЏГ®Г«Г®Г¦ГҐГ­ГЁГҐ ГЇГҐГ¤Г Г«ГЁ ГЈГ Г§Г  [ГіГ±Г«. ГҐГ¤]
+        public float[] accel_target = new float[0]; // Г‡Г Г¤Г Г­ГЁГҐ Г­Г  ГЇГҐГ¤Г Г«Гј ГЈГ Г§Г  [ГіГ±Г«. ГҐГ¤]
+        public float[] brake_value = new float[0];  // Г‡Г­Г Г·ГҐГ­ГЁГҐ Г¤Г ГІГ·ГЁГЄГ  Г®ГЎГ°Г ГІГ­Г®Г© Г±ГўГїГ§ГЁ ГЇГ® ГІГ®Г°Г¬Г®Г§Г­Г®Г© Г±ГЁГ±ГІГҐГ¬ГҐ (Г®ГІГ°ГЁГ¶Г ГІГҐГ«ГјГ­Г®ГҐ Г§Г­Г Г·ГҐГ­ГЁГҐ - ГЄГ®Г¤ Г­ГҐГЁГ±ГЇГ°Г ГўГ­Г®Г±ГІГЁ) [ГіГ±Г«. ГҐГ¤]
+        public float[] brake_target = new float[0]; // Г‡Г Г¤Г Г­ГЁГҐ Г¤Г«Гї ГІГ®Г°Г¬Г®Г§Г­Г®Г© Г±ГЁГ±ГІГҐГ¬Г» [ГіГ±Г«. ГҐГ¤]
     }
 
     [Serializable]
@@ -666,12 +1018,12 @@ namespace ProBridge.ROS.Msgs.Chassis
         string IRosMsg.GetRosType() { return "chassis_msgs.msg.ChassisSignals"; }
 
         public Header header { get; set; } = new Std.Header();
-        public bool lights_side;            // состояние габаритных огней
-        public bool lights_head;            // состояние фонарей головного света
-        public bool lights_left_turn;       // состояние левого указателя поворота
-        public bool lights_right_turn;      // состояние правого указателя поворота
-        public bool sound_signal;           // состояние звукового сигнала
-        public byte[] aux = new byte[0];     // состояние дополнительного сигнального оборудования
+        public bool lights_side;            // Г±Г®Г±ГІГ®ГїГ­ГЁГҐ ГЈГ ГЎГ Г°ГЁГІГ­Г»Гµ Г®ГЈГ­ГҐГ©
+        public bool lights_head;            // Г±Г®Г±ГІГ®ГїГ­ГЁГҐ ГґГ®Г­Г Г°ГҐГ© ГЈГ®Г«Г®ГўГ­Г®ГЈГ® Г±ГўГҐГІГ 
+        public bool lights_left_turn;       // Г±Г®Г±ГІГ®ГїГ­ГЁГҐ Г«ГҐГўГ®ГЈГ® ГіГЄГ Г§Г ГІГҐГ«Гї ГЇГ®ГўГ®Г°Г®ГІГ 
+        public bool lights_right_turn;      // Г±Г®Г±ГІГ®ГїГ­ГЁГҐ ГЇГ°Г ГўГ®ГЈГ® ГіГЄГ Г§Г ГІГҐГ«Гї ГЇГ®ГўГ®Г°Г®ГІГ 
+        public bool sound_signal;           // Г±Г®Г±ГІГ®ГїГ­ГЁГҐ Г§ГўГіГЄГ®ГўГ®ГЈГ® Г±ГЁГЈГ­Г Г«Г 
+        public byte[] aux = new byte[0];     // Г±Г®Г±ГІГ®ГїГ­ГЁГҐ Г¤Г®ГЇГ®Г«Г­ГЁГІГҐГ«ГјГ­Г®ГЈГ® Г±ГЁГЈГ­Г Г«ГјГ­Г®ГЈГ® Г®ГЎГ®Г°ГіГ¤Г®ГўГ Г­ГЁГї
     }
 
     [Serializable]
@@ -705,4 +1057,46 @@ namespace ProBridge.ROS.Msgs.Ackermann
         public float acceleration;                    // desired acceleration (m/s^2)
         public float jerk;                            // desired jerk (m/s^3)
     }
+}
+namespace ProBridge.ROS.Msgs.Radar
+{
+    public class RadarReturn : IRosMsg
+    {
+        string IRosMsg.GetRosType() { return "radar_msgs.msg.RadarReturn"; }
+        /// <summary>
+        /// Distance (m) from the sensor to the detected return.
+        /// </summary>
+        public float range;
+
+        /// <summary>
+        /// Angle (in radians) in the azimuth plane between the sensor and the detected return.
+        /// Positive angles are anticlockwise from the sensor and negative angles clockwise from the sensor as per REP-0103.
+        /// </summary>
+        public float azimuth;
+
+        /// <summary>
+        /// Angle (in radians) in the elevation plane between the sensor and the detected return.
+        /// Negative angles are below the sensor. For 2D radar, this will be 0.
+        /// </summary>
+        public float elevation;
+        
+        /// <summary>
+        /// The doppler speed (m/s) of the return.
+        /// </summary>
+        public float doppler_velocity;
+        
+        /// <summary>
+        /// The amplitude of the return (dB).
+        /// </summary>
+        public float amplitude;                   
+
+    }
+    public class RadarScan : IRosMsg, IStamped
+    {
+        string IRosMsg.GetRosType() { return "radar_msgs.msg.RadarScan"; }
+
+        public Header header { get; set; } = new Std.Header();
+        public RadarReturn[] returns;
+    }
+
 }
