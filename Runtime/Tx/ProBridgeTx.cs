@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace ProBridge.Tx
 {
-    public abstract class ProBridgeTx<T> : MonoBehaviour where T : ROS.Msgs.IRosMsg, new()
+    public abstract class ProBridgeTx<T> : MonoBehaviour where T : std_msgs.IRosMsg, new()
     {
         #region Inspector
         public ProBridgeHost host;
