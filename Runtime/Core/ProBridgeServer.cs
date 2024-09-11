@@ -28,15 +28,6 @@ namespace ProBridge
         private Queue<ProBridge.Msg> _queue = new Queue<ProBridge.Msg>();
         private long _initTime;
 
-
-        private void Awake()
-        {
-#if UNITY_EDITOR
-            QualitySettings.vSyncCount = 0;  // VSync must be disabled
-            Application.targetFrameRate = 45;
-#endif
-        }
-
         public void Start()
         {
             try
