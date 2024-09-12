@@ -13,7 +13,7 @@ namespace ProBridge
         public string addr = "127.0.0.1";
         public int port = 47778;
 
-        [HideInInspector] public PublisherSocket publisher;
+        [HideInInspector] public PushSocket pushSocket;
 
         public event EventHandler onSubscriberConnect;
         private NetMQMonitor monitor;
@@ -24,11 +24,11 @@ namespace ProBridge
         private void OnEnable()
         {
             AsyncIO.ForceDotNet.Force();
-            publisher = new PublisherSocket();
-            publisher.Bind($"tcp://{addr}:{port}");
-            publisher.Options.Linger = new TimeSpan(0, 0, 1);
+            pushSocket = new PushSocket();
+            pushSocket.Bind($"tcp://{addr}:{port}");
+            pushSocket.Options.Linger = new TimeSpan(0, 0, 1);
             
-            monitor = new NetMQMonitor(publisher, $"inproc://monitor-{addr}:{port}", SocketEvents.All);
+            monitor = new NetMQMonitor(pushSocket, $"inproc://monitor-{addr}:{port}", SocketEvents.All);
             monitor.Accepted += (s, e) => onSubscriberConnect?.Invoke(this, EventArgs.Empty);
 
             monitor.StartAsync();
@@ -37,8 +37,8 @@ namespace ProBridge
 
         private void OnDisable()
         {
-            publisher.Close();
-            publisher?.Dispose();
+            pushSocket.Close();
+            pushSocket?.Dispose();
 
             monitor.Stop();
             monitor?.Dispose();

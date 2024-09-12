@@ -83,9 +83,9 @@ namespace ProBridge
             }
         }
 
-        public void SendMsg(PublisherSocket publisher, Msg msg)
+        public void SendMsg(PushSocket pushSocket, Msg msg)
         {
-            if (publisher == null || msg == null) return;
+            if (pushSocket == null || msg == null) return;
 
             var messageData = new Dictionary<string, object>
             {
@@ -113,7 +113,7 @@ namespace ProBridge
             Buffer.BlockCopy(header, 0, buf, sizeof(short), header.Length);
             Buffer.BlockCopy(rosMsg, 0, buf, sizeof(short) + header.Length, rosMsg.Length);
 
-            publisher.SendFrame(buf);
+            pushSocket.TrySendFrame(buf);
         }
 
         private byte[] CompressData(string data)
