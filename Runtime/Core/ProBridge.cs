@@ -56,7 +56,7 @@ namespace ProBridge
         private string _ip = "127.0.0.1";
         private bool _active = true;
         private Thread _th = null;
-        private SubscriberSocket _socket;
+        private PullSocket _pullSocket;
 
 
         public ProBridge(int port = 47777, string ip = "127.0.0.1")
@@ -65,9 +65,8 @@ namespace ProBridge
             _port = port;
             
             
-            _socket = new SubscriberSocket();
-            _socket.Connect($"tcp://{_ip}:{_port}");
-            _socket.Subscribe("");
+            _pullSocket = new PullSocket();
+            _pullSocket.Connect($"tcp://{_ip}:{_port}");
         }
 
         public void Dispose()
@@ -144,7 +143,7 @@ namespace ProBridge
         {
             for (int i = 0; i < MAX_MSGS_PER_FRAME; i++)
             {
-                if (!_socket.TryReceiveFrameBytes(out var messageData))
+                if (!_pullSocket.TryReceiveFrameBytes(out var messageData))
                     break;
                 ProcessMessage(messageData);
                 
