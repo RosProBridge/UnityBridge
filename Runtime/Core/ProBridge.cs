@@ -66,7 +66,7 @@ namespace ProBridge
             
             
             _pullSocket = new PullSocket();
-            _pullSocket.Connect($"tcp://{_ip}:{_port}");
+            _pullSocket.Bind($"tcp://{_ip}:{_port}");
         }
 
         public void Dispose()
