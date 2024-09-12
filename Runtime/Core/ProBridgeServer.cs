@@ -7,7 +7,7 @@ using UnityEngine.Events;
 namespace ProBridge
 {
     [AddComponentMenu("ProBridge/Server")]
-    [DefaultExecutionOrder(-10000)]
+    [RequireComponent(typeof(InitializationManager))]
     public class ProBridgeServer : ProBridgeSingletone<ProBridgeServer>
     {
         [Serializable]
@@ -23,25 +23,10 @@ namespace ProBridge
 
         public static TimeSpan SimTime { get; private set; }
 
-        public ProBridge Bridge { get; private set; }
+        public ProBridge Bridge;
 
         private Queue<ProBridge.Msg> _queue = new Queue<ProBridge.Msg>();
-        private long _initTime;
-
-        public void Start()
-        {
-            try
-            {
-                _initTime = DateTime.Now.Ticks;
-                Bridge = new ProBridge(port, ip);
-                Bridge.onMessageHandler += OnMsg;
-            }
-            catch (Exception ex)
-            {
-                Bridge = null;
-                Debug.Log(ex);
-            }
-        }
+        public long _initTime;
 
         public void OnDestroy()
         {
@@ -51,7 +36,6 @@ namespace ProBridge
                 Bridge.Dispose();
             }
         }
-
         private void FixedUpdate()
         {
             SimTime = new TimeSpan(_initTime + (long)(Time.time * TimeSpan.TicksPerSecond));
@@ -62,7 +46,7 @@ namespace ProBridge
                 MessageEvent.Invoke(_queue.Dequeue());
         }
 
-        private void OnMsg(ProBridge.Msg msg)
+        public void OnMsg(ProBridge.Msg msg)
         {
             if (_queue.Count < queueBuffer)
                 _queue.Enqueue(msg);

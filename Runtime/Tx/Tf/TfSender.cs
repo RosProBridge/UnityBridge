@@ -29,36 +29,24 @@ namespace ProBridge.Tx.Tf
 
         public bool Active { get; set; } = true;
 
-        private ProBridge Bridge;
+        public ProBridge Bridge;
 
         private long _lastSimTime = 0;
         private List<TfLink> _links = new List<TfLink>();
         private TransformStamped[] staticTransforms;
 
-        private void Start()
+        public void CallRepeatingMethods()
         {
-            Bridge = ProBridgeServer.Instance.Bridge;
-            if (Bridge == null)
-            {
-                enabled = false;
-                Debug.LogWarning("ROS bridge server not initialized.");
-                return;
-            }
-
-            host.onSubscriberConnect += SendStaticMsg;
-            UpdateTree();
-            
-
             InvokeRepeating("UpdateTree", 0, 0.9f);
             InvokeRepeating("SendDynamicMsg", 1, sendRate);
         }
-
+        
         private void OnDisable()
         {
             CancelInvoke("SendMsg");
         }
 
-        protected void UpdateTree()
+        public void UpdateTree()
         {
             lock (_links)
             {
@@ -104,7 +92,7 @@ namespace ProBridge.Tx.Tf
         }
 
 
-        protected void SendStaticMsg(object obj, EventArgs args)
+        public void SendStaticMsg(object obj, EventArgs args)
         {
             /*
              * At present, the only available event is ZMQ_EVENT_ACCEPTED. However, this event doesn't
@@ -112,6 +100,7 @@ namespace ProBridge.Tx.Tf
              * A more reliable solution would be to use ZMQ_EVENT_HANDSHAKE_SUCCEED, but this event is not yet available in NetMQ.
              */
             Thread.Sleep(300);
+            Debug.Log("Sending static!");
             SendMsg(true);
         }
 
