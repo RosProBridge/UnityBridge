@@ -25,7 +25,26 @@ namespace vision_msgs
             public Vector3 size;
         }
 
-        public class ObjectHypothesisWithPose : IRosMsg
+        public class ObjectHypothesis : IRosMsg
+        {
+            string IRosMsg.GetRosType()
+            {
+                return "vision_msgs.msg.ObjectHypothesis";
+            }
+
+            /// <summary>
+            /// The unique string ID of the object class.
+            /// </summary>
+            public string class_id;
+
+            /// <summary>
+            /// The probability or confidence value of the detected object.
+            /// </summary>
+            public double score;
+        }
+
+
+        public class ObjectHypothesisWithPose : ObjectHypothesis
         {
             string IRosMsg.GetRosType()
             {
@@ -33,25 +52,13 @@ namespace vision_msgs
             }
 
             /// <summary>
-            /// The unique numeric ID of object detected.
-            /// </summary>
-            public long id;
-
-            /// <summary>
-            /// The probability or confidence value of the detected object. By convention,
-            /// this value should lie in the range [0-1].
-            /// </summary>
-            public double score;
-
-            /// <summary>
             /// The 6D pose of the object hypothesis. This pose should be
-            /// defined as the pose of some fixed reference point on the object, such a
-            /// the geometric center of the bounding box or the center of mass of the
-            /// object.
+            /// defined as the pose of some fixed reference point on the object,
+            /// such as the geometric center of the bounding box or the center of mass.
             /// </summary>
             public PoseWithCovariance pose;
-
         }
+
 
         public class Detection3D : IRosMsg, IStamped
         {
