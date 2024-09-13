@@ -44,7 +44,7 @@ namespace vision_msgs
         }
 
 
-        public class ObjectHypothesisWithPose : ObjectHypothesis
+        public class ObjectHypothesisWithPose : ObjectHypothesis, IRosMsg
         {
             string IRosMsg.GetRosType()
             {
