@@ -85,7 +85,7 @@ namespace vision_msgs
             /// of the same object in different detection messages should have the same id.
             /// This field may be empty.
             /// </summary>
-            string id;
+            public string id;
 
             /// <summary>
             ///Source data that generated this classification are not a part of the message.
