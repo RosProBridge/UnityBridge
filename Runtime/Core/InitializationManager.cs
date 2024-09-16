@@ -21,7 +21,7 @@ namespace ProBridge
         {
             _server = FindObjectOfType<ProBridgeServer>();
             _hosts = FindObjectsOfType<ProBridgeHost>();
-            _tfSender = GetComponent<TfSender>();
+            _tfSender = FindObjectOfType<TfSender>();
             
             
             // Init hosts sockets
@@ -49,17 +49,24 @@ namespace ProBridge
             
             
             // Init tf sender
-            _tfSender.Bridge = _server.Bridge;
-            if (_tfSender.Bridge == null)
+            if(_tfSender != null)
             {
-                enabled = false;
-                Debug.LogWarning("ROS bridge server not initialized.");
-                return;
-            }
+                _tfSender.Bridge = _server.Bridge;
+                if (_tfSender.Bridge == null)
+                {
+                    enabled = false;
+                    Debug.LogWarning("ROS bridge server not initialized.");
+                    return;
+                }
 
-            _tfSender.UpdateTree();
-            _tfSender.host.onSubscriberConnect += _tfSender.SendStaticMsg;
-            _tfSender.CallRepeatingMethods();
+                _tfSender.UpdateTree();
+                _tfSender.host.onSubscriberConnect += _tfSender.SendStaticMsg;
+                _tfSender.CallRepeatingMethods();
+            }
+            else
+            {
+                Debug.LogWarning("No TFSender found in scene.");
+            }
             
             // Init host monitors
             foreach (var host in _hosts)
