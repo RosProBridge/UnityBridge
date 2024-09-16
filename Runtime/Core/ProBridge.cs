@@ -169,12 +169,18 @@ namespace ProBridge
         {
             using (var compressedStream = new MemoryStream(headerBytes))
             using (var zipStream = new GZipStream(compressedStream, CompressionMode.Decompress))
+            using (var decompressedStream = new MemoryStream())
             {
-                var header = new byte[headerBytes.Length];
-                zipStream.Read(header, 0, header.Length);
-                return JsonConvert.DeserializeObject<Msg>(Encoding.UTF8.GetString(header));
+                zipStream.CopyTo(decompressedStream);
+                decompressedStream.Position = 0;
+                using (var reader = new StreamReader(decompressedStream, Encoding.UTF8))
+                {
+                    string jsonString = reader.ReadToEnd();
+                    return JsonConvert.DeserializeObject<Msg>(jsonString);
+                }
             }
         }
+
 
         private byte[] GetROSMessage(byte[] messageData, int headerSize)
         {
