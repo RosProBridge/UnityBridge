@@ -25,6 +25,19 @@ namespace vision_msgs
             public Vector3 size;
         }
 
+        public class BoundingBox3DArray : IRosMsg, IStamped
+        {
+            string IRosMsg.GetRosType()
+            {
+                return "vision_msgs.msg.BoundingBox3DArray";
+            }
+
+            public Header header { get; set; } = new Header();
+
+            public BoundingBox3D[] boxes;
+
+        }
+
         public class ObjectHypothesis : IRosMsg
         {
             string IRosMsg.GetRosType()
