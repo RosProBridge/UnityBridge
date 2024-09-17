@@ -86,33 +86,36 @@ namespace ProBridge
         {
             if (pushSocket == null || msg == null) return;
 
-            var messageData = new Dictionary<string, object>
+            ThreadPool.QueueUserWorkItem(state =>
             {
-                { "v", msg.v },
-                { "t", msg.t },
-                { "n", msg.n },
+                var messageData = new Dictionary<string, object>
+                {
+                    { "v", msg.v },
+                    { "t", msg.t },
+                    { "n", msg.n },
 #if ROS_V2
-                { "q", msg.q },
+                    { "q", msg.q },
 #endif
-                { "c", msg.c }
-            };
+                    { "c", msg.c }
+                };
 
-            var json = JsonConvert.SerializeObject(messageData);
-            var header = CompressData(json);
+                var json = JsonConvert.SerializeObject(messageData);
+                var header = CompressData(json);
 
-            byte[] rosMsg = CDRSerializer.Serialize(msg.d);
+                byte[] rosMsg = CDRSerializer.Serialize(msg.d);
 
-            if (msg.c > 0)
-            {
-                rosMsg = CompressData(rosMsg, msg.c);
-            }
+                if (msg.c > 0)
+                {
+                    rosMsg = CompressData(rosMsg, msg.c);
+                }
 
-            var buf = new byte[sizeof(short) + header.Length + rosMsg.Length];
-            Buffer.BlockCopy(BitConverter.GetBytes((short)header.Length), 0, buf, 0, sizeof(short));
-            Buffer.BlockCopy(header, 0, buf, sizeof(short), header.Length);
-            Buffer.BlockCopy(rosMsg, 0, buf, sizeof(short) + header.Length, rosMsg.Length);
+                var buf = new byte[sizeof(short) + header.Length + rosMsg.Length];
+                Buffer.BlockCopy(BitConverter.GetBytes((short)header.Length), 0, buf, 0, sizeof(short));
+                Buffer.BlockCopy(header, 0, buf, sizeof(short), header.Length);
+                Buffer.BlockCopy(rosMsg, 0, buf, sizeof(short) + header.Length, rosMsg.Length);
 
-            pushSocket.TrySendFrame(buf);
+                pushSocket.TrySendFrame(buf);
+            });
         }
 
         private byte[] CompressData(string data)
