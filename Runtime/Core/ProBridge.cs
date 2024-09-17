@@ -56,7 +56,7 @@ namespace ProBridge
         private string _ip = "127.0.0.1";
         private bool _active = true;
         private Thread _th = null;
-        private SubscriberSocket _socket;
+        private PullSocket _pullSocket;
 
 
         public ProBridge(int port = 47777, string ip = "127.0.0.1")
@@ -65,9 +65,8 @@ namespace ProBridge
             _port = port;
             
             
-            _socket = new SubscriberSocket();
-            _socket.Connect($"tcp://{_ip}:{_port}");
-            _socket.Subscribe("");
+            _pullSocket = new PullSocket();
+            _pullSocket.Bind($"tcp://{_ip}:{_port}");
         }
 
         public void Dispose()
@@ -83,9 +82,9 @@ namespace ProBridge
             }
         }
 
-        public void SendMsg(PublisherSocket publisher, Msg msg)
+        public void SendMsg(PushSocket pushSocket, Msg msg)
         {
-            if (publisher == null || msg == null) return;
+            if (pushSocket == null || msg == null) return;
 
             var messageData = new Dictionary<string, object>
             {
@@ -113,7 +112,7 @@ namespace ProBridge
             Buffer.BlockCopy(header, 0, buf, sizeof(short), header.Length);
             Buffer.BlockCopy(rosMsg, 0, buf, sizeof(short) + header.Length, rosMsg.Length);
 
-            publisher.SendFrame(buf);
+            pushSocket.TrySendFrame(buf);
         }
 
         private byte[] CompressData(string data)
@@ -144,7 +143,7 @@ namespace ProBridge
         {
             for (int i = 0; i < MAX_MSGS_PER_FRAME; i++)
             {
-                if (!_socket.TryReceiveFrameBytes(out var messageData))
+                if (!_pullSocket.TryReceiveFrameBytes(out var messageData))
                     break;
                 ProcessMessage(messageData);
                 
@@ -170,12 +169,18 @@ namespace ProBridge
         {
             using (var compressedStream = new MemoryStream(headerBytes))
             using (var zipStream = new GZipStream(compressedStream, CompressionMode.Decompress))
+            using (var decompressedStream = new MemoryStream())
             {
-                var header = new byte[headerBytes.Length];
-                zipStream.Read(header, 0, header.Length);
-                return JsonConvert.DeserializeObject<Msg>(Encoding.UTF8.GetString(header));
+                zipStream.CopyTo(decompressedStream);
+                decompressedStream.Position = 0;
+                using (var reader = new StreamReader(decompressedStream, Encoding.UTF8))
+                {
+                    string jsonString = reader.ReadToEnd();
+                    return JsonConvert.DeserializeObject<Msg>(jsonString);
+                }
             }
         }
+
 
         private byte[] GetROSMessage(byte[] messageData, int headerSize)
         {
