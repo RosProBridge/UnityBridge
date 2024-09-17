@@ -32,10 +32,17 @@ namespace vision_msgs
                 return "vision_msgs.msg.ObjectHypothesis";
             }
 
+#if ROS_V2
             /// <summary>
             /// The unique string ID of the object class.
             /// </summary>
             public string class_id;
+#else
+            /// <summary>
+            /// The unique numeric ID of object detected. 
+            /// </summary>
+            public long id;
+#endif
 
             /// <summary>
             /// The probability or confidence value of the detected object.
@@ -44,12 +51,29 @@ namespace vision_msgs
         }
 
 
-        public class ObjectHypothesisWithPose : ObjectHypothesis, IRosMsg
+        public class ObjectHypothesisWithPose : IRosMsg
         {
             string IRosMsg.GetRosType()
             {
                 return "vision_msgs.msg.ObjectHypothesisWithPose";
             }
+#if ROS_V2
+            /// <summary>
+            /// The object hypothesis (ID and score).
+            /// </summary>
+            public ObjectHypothesis hypothesis;
+#else
+            /// <summary>
+            /// The unique numeric ID of object detected.
+            /// </summary>
+            public long id;
+
+            /// <summary>
+            /// The probability or confidence value of the detected object. By convention,
+            /// this value should lie in the range [0-1].
+            /// </summary>
+            public double score;
+#endif
 
             /// <summary>
             /// The 6D pose of the object hypothesis. This pose should be
@@ -80,20 +104,22 @@ namespace vision_msgs
             /// </summary>
             public BoundingBox3D bbox;
 
+#if ROS_V2
             /// <summary>
             /// ID used for consistency across multiple detection messages. Detections
             /// of the same object in different detection messages should have the same id.
             /// This field may be empty.
             /// </summary>
             public string id;
+#else
 
             /// <summary>
-            ///Source data that generated this classification are not a part of the message.
-            ///If you need to access them, use an exact or approximate time synchronizer in
-            ///your code, as this message's header should match the header of the source
-            ///data.
+            ///The 3D data that generated these results (i.e. region proposal cropped out of
+            ///the image). This information is not required for all detectors, so it may
+            ///be empty..
             /// </summary>
             public PointCloud2 source_cloud;
+#endif
 
         }
 
