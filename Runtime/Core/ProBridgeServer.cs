@@ -26,7 +26,7 @@ namespace ProBridge
         public ProBridge Bridge;
 
         private Queue<ProBridge.Msg> _queue = new Queue<ProBridge.Msg>();
-        public long _initTime;
+        [HideInInspector] public long _initTime;
 
         public void OnDestroy()
         {
