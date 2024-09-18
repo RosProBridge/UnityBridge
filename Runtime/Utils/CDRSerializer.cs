@@ -82,6 +82,14 @@ namespace ProBridge.Utils
                 {
                     writer.Write((uint)value);
                 }
+                else if (fieldType == typeof(long))
+                {
+                    writer.Write((long)value);
+                }
+                else if (fieldType == typeof(ulong))
+                {
+                    writer.Write((ulong)value);
+                }
                 else if (fieldType == typeof(float))
                 {
                     writer.Write((float)value);
@@ -191,6 +199,14 @@ namespace ProBridge.Utils
                     {
                         writer.Write((uint)item);
                     }
+                    else if (itemType == typeof(long))
+                    {
+                        writer.Write((long)item);
+                    }
+                    else if (itemType == typeof(ulong))
+                    {
+                        writer.Write((ulong)item);
+                    }
                     else if (itemType == typeof(float))
                     {
                         writer.Write((float)item);
@@ -223,6 +239,8 @@ namespace ProBridge.Utils
             if (type == typeof(ushort)) return 2;
             if (type == typeof(int)) return 4;
             if (type == typeof(uint)) return 4;
+            if (type == typeof(long)) return 8;
+            if (type == typeof(ulong)) return 8;
             if (type == typeof(float)) return 4;
             if (type == typeof(string)) return 4;
             if (type == typeof(double)) return 8;
@@ -292,6 +310,14 @@ namespace ProBridge.Utils
                 else if (field.FieldType == typeof(uint))
                 {
                     field.SetValue(obj, reader.ReadUInt32());
+                }
+                else if (field.FieldType == typeof(long))
+                {
+                    field.SetValue(obj, reader.ReadInt64());
+                }
+                else if (field.FieldType == typeof(ulong))
+                {
+                    field.SetValue(obj, reader.ReadUInt64());
                 }
                 else if (field.FieldType == typeof(float))
                 {
@@ -390,6 +416,14 @@ namespace ProBridge.Utils
                 else if (elementType == typeof(uint))
                 {
                     array.SetValue(reader.ReadUInt32(), i);
+                }
+                else if (elementType == typeof(long))
+                {
+                    array.SetValue(reader.ReadInt64(), i);
+                }
+                else if (elementType == typeof(ulong))
+                {
+                    array.SetValue(reader.ReadUInt64(), i);
                 }
                 else if (elementType == typeof(float))
                 {
