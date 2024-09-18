@@ -2,13 +2,17 @@
 using System.IO;
 using System.Reflection;
 using System.Text;
+using Unity.Collections;
 using UnityEngine;
 using Object = System.Object;
+using Unity.Jobs;
 
 namespace ProBridge.Utils
 {   
     public static class CDRSerializer
     {
+
+        private static IArrayToBytesJob _arrayToBytesJob;
         
 #if ROS_V2
         // Used to add alignment and string terminator incase of ROS2
@@ -78,6 +82,14 @@ namespace ProBridge.Utils
                 {
                     writer.Write((uint)value);
                 }
+                else if (fieldType == typeof(long))
+                {
+                    writer.Write((long)value);
+                }
+                else if (fieldType == typeof(ulong))
+                {
+                    writer.Write((ulong)value);
+                }
                 else if (fieldType == typeof(float))
                 {
                     writer.Write((float)value);
@@ -96,11 +108,11 @@ namespace ProBridge.Utils
                     Object arrayValue = field.GetValue(tmpInstence);
                     if (arrayValue == null)
                     {
-                        WriteArray(writer, value as Array, true);
+                        WriteArray(writer, value as Array,field.FieldType.GetElementType(), true);
                     }
                     else
                     {
-                        WriteArray(writer, value as Array);
+                        WriteArray(writer, value as Array, field.FieldType.GetElementType());
                     }
                     
                 }
@@ -130,7 +142,7 @@ namespace ProBridge.Utils
             }
         }
 
-        private static void WriteArray(BinaryWriter writer, Array array, bool addLength = false)
+        private static void WriteArray(BinaryWriter writer, Array array, Type itemType, bool addLength = false)
         {
             if (addLength)
             {
@@ -138,60 +150,84 @@ namespace ProBridge.Utils
                 writer.Write(array.Length);
             }
 
-            foreach (var item in array)
-            {
-                Type itemType = item.GetType();
-                if (ROS2Serialization) AlignStream(writer, GetAlignment(itemType));
+            if (ROS2Serialization) AlignStream(writer, GetAlignment(itemType));
 
-                if (itemType == typeof(bool))
+            if (itemType == typeof(byte))
+            {
+                NativeArray<byte> tmpOutput = new NativeArray<byte>(array.Length * 1, Allocator.TempJob);
+                NativeArray<byte> tmpInput = new NativeArray<byte>((byte[])array, Allocator.TempJob);
+                _arrayToBytesJob = new IArrayToBytesJob()
                 {
-                    writer.Write((bool)item);
-                }
-                else if (itemType == typeof(byte))
-                {
-                    writer.Write((byte)item);
-                }
-                else if (itemType == typeof(sbyte))
-                {
-                    writer.Write((sbyte)item);
-                }
-                else if (itemType == typeof(short))
-                {
-                    writer.Write((short)item);
-                }
-                else if (itemType == typeof(ushort))
-                {
-                    writer.Write((ushort)item);
-                }
-                else if (itemType == typeof(int))
-                {
-                    writer.Write((int)item);
-                }
-                else if (itemType == typeof(uint))
-                {
-                    writer.Write((uint)item);
-                }
-                else if (itemType == typeof(float))
-                {
-                    writer.Write((float)item);
-                }
-                else if (itemType == typeof(double))
-                {
-                    writer.Write((double)item);
-                }
-                else if (itemType == typeof(string))
-                {
-                    WriteString(writer, (string)item);
-                }
-                else if (itemType.IsClass && !itemType.IsPrimitive) // Classes
-                {
-                    SerializeObject(writer, item);
-                }
-                else
-                {
-                    throw new InvalidOperationException($"Unsupported array item type: {itemType.Name}");
-                }
+                    items = tmpInput,
+                    itemSize = 1,
+                    serialized = tmpOutput
+                };
+                var jobHandle = _arrayToBytesJob.Schedule(array.Length, 2048);
+                jobHandle.Complete();
+                writer.Write(tmpOutput.ToArray());
+                tmpOutput.Dispose();
+                tmpInput.Dispose();
             }
+            else
+                foreach (var item in array)
+                {
+                    if (itemType == typeof(bool))
+                    {
+                        writer.Write((bool)item);
+                    }
+                    // else if (itemType == typeof(byte))
+                    // {
+                    //     writer.Write((byte)item);
+                    // }
+                    else if (itemType == typeof(sbyte))
+                    {
+                        writer.Write((sbyte)item);
+                    }
+                    else if (itemType == typeof(short))
+                    {
+                        writer.Write((short)item);
+                    }
+                    else if (itemType == typeof(ushort))
+                    {
+                        writer.Write((ushort)item);
+                    }
+                    else if (itemType == typeof(int))
+                    {
+                        writer.Write((int)item);
+                    }
+                    else if (itemType == typeof(uint))
+                    {
+                        writer.Write((uint)item);
+                    }
+                    else if (itemType == typeof(long))
+                    {
+                        writer.Write((long)item);
+                    }
+                    else if (itemType == typeof(ulong))
+                    {
+                        writer.Write((ulong)item);
+                    }
+                    else if (itemType == typeof(float))
+                    {
+                        writer.Write((float)item);
+                    }
+                    else if (itemType == typeof(double))
+                    {
+                        writer.Write((double)item);
+                    }
+                    else if (itemType == typeof(string))
+                    {
+                        WriteString(writer, (string)item);
+                    }
+                    else if (itemType.IsClass && !itemType.IsPrimitive) // Classes
+                    {
+                        SerializeObject(writer, item);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException($"Unsupported array item type: {itemType.Name}");
+                    }
+                }
         }
 
         private static int GetAlignment(Type type)
@@ -203,6 +239,8 @@ namespace ProBridge.Utils
             if (type == typeof(ushort)) return 2;
             if (type == typeof(int)) return 4;
             if (type == typeof(uint)) return 4;
+            if (type == typeof(long)) return 8;
+            if (type == typeof(ulong)) return 8;
             if (type == typeof(float)) return 4;
             if (type == typeof(string)) return 4;
             if (type == typeof(double)) return 8;
@@ -272,6 +310,14 @@ namespace ProBridge.Utils
                 else if (field.FieldType == typeof(uint))
                 {
                     field.SetValue(obj, reader.ReadUInt32());
+                }
+                else if (field.FieldType == typeof(long))
+                {
+                    field.SetValue(obj, reader.ReadInt64());
+                }
+                else if (field.FieldType == typeof(ulong))
+                {
+                    field.SetValue(obj, reader.ReadUInt64());
                 }
                 else if (field.FieldType == typeof(float))
                 {
@@ -370,6 +416,14 @@ namespace ProBridge.Utils
                 else if (elementType == typeof(uint))
                 {
                     array.SetValue(reader.ReadUInt32(), i);
+                }
+                else if (elementType == typeof(long))
+                {
+                    array.SetValue(reader.ReadInt64(), i);
+                }
+                else if (elementType == typeof(ulong))
+                {
+                    array.SetValue(reader.ReadUInt64(), i);
                 }
                 else if (elementType == typeof(float))
                 {

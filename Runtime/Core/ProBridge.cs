@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.IO.Compression;
-using System.Net;
 using System.Threading;
 using NetMQ;
 using NetMQ.Sockets;
@@ -15,6 +14,7 @@ namespace ProBridge
     public class ProBridge : IDisposable
     {
         private const int MAX_MSGS_PER_FRAME = 100;
+
         public class Msg
         {
             public byte v;
@@ -63,8 +63,8 @@ namespace ProBridge
         {
             _ip = ip;
             _port = port;
-            
-            
+
+
             _pullSocket = new PullSocket();
             _pullSocket.Bind($"tcp://{_ip}:{_port}");
         }
@@ -85,7 +85,6 @@ namespace ProBridge
         public void SendMsg(PushSocket pushSocket, Msg msg)
         {
             if (pushSocket == null || msg == null) return;
-
             var messageData = new Dictionary<string, object>
             {
                 { "v", msg.v },
@@ -146,7 +145,6 @@ namespace ProBridge
                 if (!_pullSocket.TryReceiveFrameBytes(out var messageData))
                     break;
                 ProcessMessage(messageData);
-                
             }
         }
 

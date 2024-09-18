@@ -59,13 +59,20 @@ namespace ProBridge.Tx
             }
             _lastSimTime = st;
 
-            if (Active && topic != "")
+            if (!Active || topic == "") return;
+            ProBridge.Msg msg;
+            try
             {
-                var msg = GetMsg(ProBridgeServer.SimTime);
-                OnSendMessage?.Invoke(this, msg);
-                if (Bridge != null)
-                    Bridge.SendMsg(host.pushSocket, msg);
+                msg = GetMsg(ProBridgeServer.SimTime);
             }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"Failed to get message for {topic}, PC might be running slower than requested frequency." + e);
+                return;
+            }
+            OnSendMessage?.Invoke(this, msg);
+            if (Bridge != null)
+                Bridge.SendMsg(host.pushSocket, msg);
         }
 
         protected virtual ProBridge.Msg GetMsg(TimeSpan ts)
