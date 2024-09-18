@@ -146,8 +146,8 @@ namespace ProBridge.Utils
 
             if (itemType == typeof(byte))
             {
-                NativeArray<byte> tmpOutput = new NativeArray<byte>(array.Length * 1, Allocator.TempJob);
-                NativeArray<byte> tmpInput = new NativeArray<byte>((byte[])array, Allocator.TempJob);
+                NativeArray<byte> tmpOutput = new NativeArray<byte>(array.Length * 1, Allocator.Temp);
+                NativeArray<byte> tmpInput = new NativeArray<byte>((byte[])array, Allocator.Temp);
                 _arrayToBytesJob = new IArrayToBytesJob()
                 {
                     items = tmpInput,
