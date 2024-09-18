@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.IO.Compression;
-using System.Net;
 using System.Threading;
 using NetMQ;
 using NetMQ.Sockets;
@@ -15,6 +14,7 @@ namespace ProBridge
     public class ProBridge : IDisposable
     {
         private const int MAX_MSGS_PER_FRAME = 100;
+
         public class Msg
         {
             public byte v;
@@ -63,8 +63,8 @@ namespace ProBridge
         {
             _ip = ip;
             _port = port;
-            
-            
+
+
             _pullSocket = new PullSocket();
             _pullSocket.Bind($"tcp://{_ip}:{_port}");
         }
@@ -85,37 +85,33 @@ namespace ProBridge
         public void SendMsg(PushSocket pushSocket, Msg msg)
         {
             if (pushSocket == null || msg == null) return;
-
-            ThreadPool.QueueUserWorkItem(state =>
+            var messageData = new Dictionary<string, object>
             {
-                var messageData = new Dictionary<string, object>
-                {
-                    { "v", msg.v },
-                    { "t", msg.t },
-                    { "n", msg.n },
+                { "v", msg.v },
+                { "t", msg.t },
+                { "n", msg.n },
 #if ROS_V2
-                    { "q", msg.q },
+                { "q", msg.q },
 #endif
-                    { "c", msg.c }
-                };
+                { "c", msg.c }
+            };
 
-                var json = JsonConvert.SerializeObject(messageData);
-                var header = CompressData(json);
+            var json = JsonConvert.SerializeObject(messageData);
+            var header = CompressData(json);
 
-                byte[] rosMsg = CDRSerializer.Serialize(msg.d);
+            byte[] rosMsg = CDRSerializer.Serialize(msg.d);
 
-                if (msg.c > 0)
-                {
-                    rosMsg = CompressData(rosMsg, msg.c);
-                }
+            if (msg.c > 0)
+            {
+                rosMsg = CompressData(rosMsg, msg.c);
+            }
 
-                var buf = new byte[sizeof(short) + header.Length + rosMsg.Length];
-                Buffer.BlockCopy(BitConverter.GetBytes((short)header.Length), 0, buf, 0, sizeof(short));
-                Buffer.BlockCopy(header, 0, buf, sizeof(short), header.Length);
-                Buffer.BlockCopy(rosMsg, 0, buf, sizeof(short) + header.Length, rosMsg.Length);
+            var buf = new byte[sizeof(short) + header.Length + rosMsg.Length];
+            Buffer.BlockCopy(BitConverter.GetBytes((short)header.Length), 0, buf, 0, sizeof(short));
+            Buffer.BlockCopy(header, 0, buf, sizeof(short), header.Length);
+            Buffer.BlockCopy(rosMsg, 0, buf, sizeof(short) + header.Length, rosMsg.Length);
 
-                pushSocket.TrySendFrame(buf);
-            });
+            pushSocket.TrySendFrame(buf);
         }
 
         private byte[] CompressData(string data)
@@ -149,7 +145,6 @@ namespace ProBridge
                 if (!_pullSocket.TryReceiveFrameBytes(out var messageData))
                     break;
                 ProcessMessage(messageData);
-                
             }
         }
 
