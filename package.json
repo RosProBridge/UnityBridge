@@ -1,6 +1,6 @@
 {
     "name": "com.ars.probridge",
-    "version": "3.1.0",
+    "version": "3.1.1",
     "displayName": "ProBridge",
     "description": "ProBridge scripts required for connecting simulator to ROS",
     "unity": "2018.4",
