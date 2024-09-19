@@ -47,9 +47,19 @@ namespace ProBridge
             public object d;
         }
 
+
+        public enum MessageType
+        {
+            Log,
+            Error,
+            Warning
+        }
+
         public delegate void OnMessage(Msg msg);
+        public delegate void OnDebugMsg(string msg, MessageType messageType);
 
         public OnMessage onMessageHandler = null;
+        public OnDebugMsg onDebugHandler = null;
 
 
         private int _port;
@@ -198,6 +208,21 @@ namespace ProBridge
                 subzipStream.Read(decompressedBytes, 0, (int)subzipStream.Length);
                 return decompressedBytes;
             }
+        }
+
+        private void LogMessage(string message)
+        {
+            onDebugHandler?.Invoke(message, MessageType.Log);
+        }
+        
+        private void LogError(string message)
+        {
+            onDebugHandler?.Invoke(message, MessageType.Error);
+        }
+
+        private void LogWarning(string message)
+        {
+            onDebugHandler?.Invoke(message, MessageType.Warning);
         }
     }
 }

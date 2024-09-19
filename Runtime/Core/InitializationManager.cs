@@ -40,6 +40,7 @@ namespace ProBridge
                 _server._initTime = DateTime.Now.Ticks;
                 _server.Bridge = new ProBridge(_server.port, _server.ip);
                 _server.Bridge.onMessageHandler += _server.OnMsg;
+                _server.Bridge.onDebugHandler += _server.OnLogMessage;
             }
             catch (Exception ex)
             {
