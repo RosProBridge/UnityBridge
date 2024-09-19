@@ -108,9 +108,19 @@ namespace ProBridge
 
             var json = JsonConvert.SerializeObject(messageData);
             var header = CompressData(json);
-
-            byte[] rosMsg = CDRSerializer.Serialize(msg.d);
-
+            
+            byte[] rosMsg;
+            try
+            {
+                rosMsg = CDRSerializer.Serialize(msg.d);
+            }
+            catch (Exception e)
+            {
+                LogError($"Failed to serialize message for {msg.n} of type {msg.t} : {e}");
+                return;
+            }
+            
+            
             if (msg.c > 0)
             {
                 rosMsg = CompressData(rosMsg, msg.c);
