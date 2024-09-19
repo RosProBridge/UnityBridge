@@ -1,3 +1,4 @@
+using System;
 using ProBridge.Utils;
 using UnityEngine;
 
@@ -18,12 +19,18 @@ namespace ProBridge.Rx
 
             if (msg.t != __msg.GetRosType())
                 return;
-
-            // TO DO переделать на регулярное выражение 
+            
             if (msg.n != topic)
                 return;
 
-            OnMessage(CDRSerializer.Deserialize<T>((byte[])msg.d));
+            try
+            {
+                OnMessage(CDRSerializer.Deserialize<T>((byte[])msg.d));
+            }
+            catch(Exception e)
+            {
+                Debug.LogError($"Failed to deserialize message for {msg.n} of type {msg.t} : {e}");
+            }
         }
 
         private void Awake()
