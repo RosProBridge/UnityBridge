@@ -173,8 +173,28 @@ namespace ProBridge
                 decompressedStream.Position = 0;
                 using (var reader = new StreamReader(decompressedStream, Encoding.UTF8))
                 {
-                    string jsonString = reader.ReadToEnd();
-                    return JsonConvert.DeserializeObject<Msg>(jsonString);
+                    var jsonString = reader.ReadToEnd();
+
+
+                    var messageData = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonString);
+                    
+
+                    var qos = new Qos(messageData["q"]);
+
+
+                    var tmpV = (long)messageData["v"];
+                    var tmpC = (long)messageData["c"];
+
+                    var msg = new Msg();
+                    msg.v = (byte)tmpV;
+                    msg.t = (string)messageData["t"];
+                    msg.n = (string)messageData["n"];
+#if ROS_V2
+                    msg.q = qos.GetValue();
+#endif
+                    msg.c = (int)tmpC;
+                    
+                    return msg;
                 }
             }
         }
