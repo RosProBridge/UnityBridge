@@ -34,7 +34,7 @@ namespace ProBridge
             /// <summary>
             /// Quality od service, like as "qos_profile_system_default" or "qos_profile_sensor_data"
             /// </summary>
-            public object q = 10;
+            public Qos q;
 #endif
             /// <summary>
             /// Data Compression Level (0-9)
@@ -91,7 +91,7 @@ namespace ProBridge
                 { "t", msg.t },
                 { "n", msg.n },
 #if ROS_V2
-                { "q", msg.q },
+                { "q", msg.q.GetValue() },
 #endif
                 { "c", msg.c }
             };
@@ -179,9 +179,6 @@ namespace ProBridge
                     var messageData = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonString);
                     
 
-                    var qos = new Qos(messageData["q"]);
-
-
                     var tmpV = (long)messageData["v"];
                     var tmpC = (long)messageData["c"];
 
@@ -190,7 +187,7 @@ namespace ProBridge
                     msg.t = (string)messageData["t"];
                     msg.n = (string)messageData["n"];
 #if ROS_V2
-                    msg.q = qos.GetValue();
+                    msg.q = new Qos(messageData["q"]);
 #endif
                     msg.c = (int)tmpC;
                     

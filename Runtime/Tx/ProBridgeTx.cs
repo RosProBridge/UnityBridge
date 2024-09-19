@@ -88,7 +88,7 @@ namespace ProBridge.Tx
                 t = data.GetRosType(),
                 c = compressionLevel,
 #if ROS_V2
-                q = qos.GetValue(),
+                q = qos,
 #endif
                 d = data
             };
