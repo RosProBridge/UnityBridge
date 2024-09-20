@@ -190,13 +190,12 @@ namespace ProBridge
 
         private byte[] DecompressROSMessage(byte[] rosMsg, int compressionLevel = 1)
         {
-            // TODO: use compressionLevel (current issue is that there is only 3 levels in GZipStream)
             using (var subcompressedStream = new MemoryStream(rosMsg))
             using (var subzipStream = new GZipStream(subcompressedStream, CompressionMode.Decompress))
+            using (var decompressedStream = new MemoryStream())
             {
-                var decompressedBytes = new byte[subzipStream.Length];
-                subzipStream.Read(decompressedBytes, 0, (int)subzipStream.Length);
-                return decompressedBytes;
+                subzipStream.CopyTo(decompressedStream);
+                return decompressedStream.ToArray();
             }
         }
     }
