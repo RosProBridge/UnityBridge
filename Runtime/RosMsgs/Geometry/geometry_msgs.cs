@@ -129,11 +129,11 @@ namespace geometry_msgs
             public Twist twist = new Twist();
         }
 
-        public class TwistithCovariance : IRosMsg
+        public class TwistWithCovariance : IRosMsg
         {
             string IRosMsg.GetRosType()
             {
-                return "geometry_msgs.msg.TwistithCovariance";
+                return "geometry_msgs.msg.TwistWithCovariance";
             }
 
             public Twist twist = new Twist();
