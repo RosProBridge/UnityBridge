@@ -136,7 +136,7 @@ namespace ProBridge.Tx.Tf
                     t = (data as IRosMsg).GetRosType(),
                     c = compressionLevel,
 #if ROS_V2
-                    q = staticT ? staticQos.GetValue() : dynamicQos.GetValue(),
+                    q = staticT ? staticQos : dynamicQos,
 #endif
                     d = data
                 };
