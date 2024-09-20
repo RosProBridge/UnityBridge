@@ -148,9 +148,9 @@ namespace ProBridge
 
         private byte[] CompressData(byte[] data, int compressionLevel = 1)
         {
-            // TODO: use compressionLevel (current issue is that there is only 3 levels in GZipStream)
             using (var compressedStream = new MemoryStream())
-            using (var zipStream = new GZipStream(compressedStream, CompressionLevel.Fastest))
+            using (var zipStream = new GZipStream(compressedStream,
+                       (compressionLevel == 1 ? CompressionLevel.Fastest : CompressionLevel.Optimal)))
             {
                 zipStream.Write(data, 0, data.Length);
                 zipStream.Close();
@@ -178,7 +178,7 @@ namespace ProBridge
             var msg = DeserializeMessage(headerBytes);
             var rosMsg = GetROSMessage(messageData, headerSize);
 
-            msg.d = msg.c > 0 ? DecompressROSMessage(rosMsg, msg.c) : rosMsg;
+            msg.d = msg.c > 0 ? DecompressROSMessage(rosMsg) : rosMsg;
 
             onMessageHandler?.Invoke(msg);
         }
@@ -208,15 +208,14 @@ namespace ProBridge
             return rosMsg;
         }
 
-        private byte[] DecompressROSMessage(byte[] rosMsg, int compressionLevel = 1)
+        private byte[] DecompressROSMessage(byte[] rosMsg)
         {
-            // TODO: use compressionLevel (current issue is that there is only 3 levels in GZipStream)
             using (var subcompressedStream = new MemoryStream(rosMsg))
             using (var subzipStream = new GZipStream(subcompressedStream, CompressionMode.Decompress))
+            using (var decompressedStream = new MemoryStream())
             {
-                var decompressedBytes = new byte[subzipStream.Length];
-                subzipStream.Read(decompressedBytes, 0, (int)subzipStream.Length);
-                return decompressedBytes;
+                subzipStream.CopyTo(decompressedStream);
+                return decompressedStream.ToArray();
             }
         }
 

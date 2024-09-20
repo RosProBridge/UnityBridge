@@ -11,7 +11,7 @@ namespace ProBridge.Tx
         public bool manualSend;
         public float sendRate = 0.025f;
         public string topic = "";
-        [Range(0, 9)]
+        [Range(0, 2)]
         public int compressionLevel = 0;
 
 

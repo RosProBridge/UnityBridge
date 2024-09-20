@@ -17,7 +17,7 @@ namespace ProBridge.Tx.Tf
 
         public ProBridgeHost host;
         public float sendRate = 0.1f;
-        [Range(0, 9)] public int compressionLevel = 0;
+        [Range(0, 2)] public int compressionLevel = 0;
         public string dynamicTopic = "/tf";
         public string staticTopic = "/tf_static";
 #if ROS_V2
