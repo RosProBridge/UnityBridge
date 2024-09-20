@@ -128,9 +128,9 @@ namespace ProBridge
 
         private byte[] CompressData(byte[] data, int compressionLevel = 1)
         {
-            // TODO: use compressionLevel (current issue is that there is only 3 levels in GZipStream)
             using (var compressedStream = new MemoryStream())
-            using (var zipStream = new GZipStream(compressedStream, CompressionLevel.Fastest))
+            using (var zipStream = new GZipStream(compressedStream,
+                       (compressionLevel == 1 ? CompressionLevel.Fastest : CompressionLevel.Optimal)))
             {
                 zipStream.Write(data, 0, data.Length);
                 zipStream.Close();
