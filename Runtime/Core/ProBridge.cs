@@ -158,7 +158,7 @@ namespace ProBridge
             var msg = DeserializeMessage(headerBytes);
             var rosMsg = GetROSMessage(messageData, headerSize);
 
-            msg.d = msg.c > 0 ? DecompressROSMessage(rosMsg, msg.c) : rosMsg;
+            msg.d = msg.c > 0 ? DecompressROSMessage(rosMsg) : rosMsg;
 
             onMessageHandler?.Invoke(msg);
         }
@@ -188,7 +188,7 @@ namespace ProBridge
             return rosMsg;
         }
 
-        private byte[] DecompressROSMessage(byte[] rosMsg, int compressionLevel = 1)
+        private byte[] DecompressROSMessage(byte[] rosMsg)
         {
             using (var subcompressedStream = new MemoryStream(rosMsg))
             using (var subzipStream = new GZipStream(subcompressedStream, CompressionMode.Decompress))
