@@ -8,6 +8,7 @@ namespace ProBridge.Tx
     {
         #region Inspector
         public ProBridgeHost host;
+        public bool manualSend;
         public float sendRate = 0.025f;
         public string topic = "";
         [Range(0, 9)]
@@ -40,7 +41,10 @@ namespace ProBridge.Tx
             }
 
             OnStart();
-            InvokeRepeating("SendMsg", 0, sendRate);
+            
+            if(sendRate>0f && !manualSend) InvokeRepeating(nameof(SendMsg), 0, sendRate);
+            
+            
         }
 
         private void OnDisable()
