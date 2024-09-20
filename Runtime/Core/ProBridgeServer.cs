@@ -33,6 +33,7 @@ namespace ProBridge
             if (Bridge != null)
             {
                 Bridge.onMessageHandler -= OnMsg;
+                Bridge.onDebugHandler -= OnLogMessage;
                 Bridge.Dispose();
             }
         }
@@ -50,6 +51,16 @@ namespace ProBridge
         {
             if (_queue.Count < queueBuffer)
                 _queue.Enqueue(msg);
+        }
+
+        public void OnLogMessage(string message, ProBridge.MessageType messageType)
+        {
+            if (messageType == ProBridge.MessageType.Log)
+                Debug.Log(message);
+            else if (messageType == ProBridge.MessageType.Error)
+                Debug.LogError(message);
+            else if (messageType == ProBridge.MessageType.Warning)
+                Debug.LogWarning(message);
         }
     }
 }

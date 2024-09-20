@@ -47,9 +47,19 @@ namespace ProBridge
             public object d;
         }
 
+
+        public enum MessageType
+        {
+            Log,
+            Error,
+            Warning
+        }
+
         public delegate void OnMessage(Msg msg);
+        public delegate void OnDebugMsg(string msg, MessageType messageType);
 
         public OnMessage onMessageHandler = null;
+        public OnDebugMsg onDebugHandler = null;
 
 
         private int _port;
@@ -98,9 +108,19 @@ namespace ProBridge
 
             var json = JsonConvert.SerializeObject(messageData);
             var header = CompressData(json);
-
-            byte[] rosMsg = CDRSerializer.Serialize(msg.d);
-
+            
+            byte[] rosMsg;
+            try
+            {
+                rosMsg = CDRSerializer.Serialize(msg.d);
+            }
+            catch (Exception e)
+            {
+                LogError($"Failed to serialize message for {msg.n} of type {msg.t} : {e}");
+                return;
+            }
+            
+            
             if (msg.c > 0)
             {
                 rosMsg = CompressData(rosMsg, msg.c);
@@ -198,6 +218,21 @@ namespace ProBridge
                 subzipStream.Read(decompressedBytes, 0, (int)subzipStream.Length);
                 return decompressedBytes;
             }
+        }
+
+        private void LogMessage(string message)
+        {
+            onDebugHandler?.Invoke(message, MessageType.Log);
+        }
+        
+        private void LogError(string message)
+        {
+            onDebugHandler?.Invoke(message, MessageType.Error);
+        }
+
+        private void LogWarning(string message)
+        {
+            onDebugHandler?.Invoke(message, MessageType.Warning);
         }
     }
 }
