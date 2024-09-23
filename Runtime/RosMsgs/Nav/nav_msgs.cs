@@ -16,7 +16,7 @@ namespace nav_msgs
             public Header header { get; set; } = new Header();
             public string child_frame_id;
             public PoseWithCovariance pose = new PoseWithCovariance();
-            public TwistithCovariance twist = new TwistithCovariance();
+            public TwistWithCovariance twist = new TwistWithCovariance();
         }
 
         public class Path : IRosMsg, IStamped
