@@ -37,7 +37,7 @@ namespace ProBridge
             // Init server
             try
             {
-                _server._initTime = DateTime.Now.Ticks;
+                _server._initTime = DateTime.UtcNow.Ticks;
                 _server.Bridge = new ProBridge(_server.port, _server.ip);
                 _server.Bridge.onMessageHandler += _server.OnMsg;
                 _server.Bridge.onDebugHandler += _server.OnLogMessage;
