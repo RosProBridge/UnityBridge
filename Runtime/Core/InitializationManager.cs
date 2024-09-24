@@ -17,7 +17,7 @@ namespace ProBridge
         private ProBridgeHost[] _hosts;
         private TfSender _tfSender;
 
-        private void OnEnable()
+        private void Awake()
         {
             _server = FindObjectOfType<ProBridgeServer>();
             _hosts = FindObjectsOfType<ProBridgeHost>();
@@ -37,7 +37,6 @@ namespace ProBridge
             // Init server
             try
             {
-                _server._initTime = DateTime.UtcNow.Ticks;
                 _server.Bridge = new ProBridge(_server.port, _server.ip);
                 _server.Bridge.onMessageHandler += _server.OnMsg;
                 _server.Bridge.onDebugHandler += _server.OnLogMessage;

@@ -37,9 +37,18 @@ namespace ProBridge
                 Bridge.Dispose();
             }
         }
+
+        private bool firstFrame;
+
         private void FixedUpdate()
         {
-            SimTime = new TimeSpan(_initTime + (long)(Time.time * TimeSpan.TicksPerSecond));
+            if (!firstFrame)
+            {
+                firstFrame = true;
+                _initTime = DateTime.UtcNow.Ticks;
+            }
+            
+            SimTime = new TimeSpan(_initTime + (long)(Time.timeAsDouble * TimeSpan.TicksPerSecond));
             
             Bridge.TryReceive();
 
