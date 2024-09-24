@@ -48,7 +48,7 @@ namespace ProBridge
                 _initTime = DateTime.UtcNow.Ticks;
             }
             
-            SimTime = new TimeSpan(_initTime + (long)(Time.timeAsDouble * TimeSpan.TicksPerSecond));
+            SimTime = new TimeSpan(_initTime + (long)(Time.fixedTime * TimeSpan.TicksPerSecond));
             
             Bridge.TryReceive();
 
