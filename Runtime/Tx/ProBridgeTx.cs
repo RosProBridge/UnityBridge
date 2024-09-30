@@ -31,6 +31,8 @@ namespace ProBridge.Tx
 
         private long _lastSimTime = 0;
 
+        private bool initialized;
+
         private void Start()
         {
             if (Bridge == null)
@@ -41,10 +43,22 @@ namespace ProBridge.Tx
             }
 
             OnStart();
+            initialized = true;
             
             if(sendRate>0f && !manualSend) InvokeRepeating(nameof(SendMsg), 0, sendRate);
             
             
+        }
+
+        private void OnEnable()
+        {
+            if(sendRate>0f && !manualSend && initialized) InvokeRepeating(nameof(SendMsg), 0, sendRate);
+
+        }
+
+        private void OnDisable()
+        {
+            CancelInvoke("SendMsg");
         }
 
         private void OnDestroy()
