@@ -47,7 +47,7 @@ namespace ProBridge.Tx
             
         }
 
-        private void OnDisable()
+        private void OnDestroy()
         {
             CancelInvoke("SendMsg");
             OnStop();
