@@ -1,16 +1,16 @@
-# ProBridge Package
+# Unity ProBridge
 
-This documentation provides a comprehensive guide on how to integrate the ProBridge package, which contains essential scripts for connecting simulators to ROS (Robot Operating System), into your Unity project.
+Unity ProBridge is part of the ProBridge System, designed for seamless communication between Unity and ROS. For ROS integration, see [RosProBridge](https://github.com/RosProBridge/RosProBridge). With the Sensors plugin ([UnityBridgeSensors](https://github.com/RosProBridge/UnityBridgeSensors)), you can simulate sensors in Unity and send data to ROS effortlessly.
 
-## Prerequisites
+
+## Installation Guide
+### Prerequisites
 
 Before you begin, ensure you have the following:
 
 - Git installed on your computer.
 - Unity Editor 2018.4 or later installed and ready to use.
 - [NuGetForUnity](https://github.com/GlitchEnzo/NuGetForUnity) Installed, Check their README for installation and usage guide.
-
-## Installation Guide
 
 ### 1. Installing NetMQ through NuGetForUnity
 
@@ -46,6 +46,7 @@ Within the Package Manager:
 
 - Click the `+` button in the top left corner.
 - Select `Add package from git URL...`.
+- Add the following link `https://github.com/RosProBridge/UnityBridge.git`
 
 ![Package Manager Add](Images/pm_add.png "Add package from git URL")
 
