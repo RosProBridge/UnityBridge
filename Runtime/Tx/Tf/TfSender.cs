@@ -10,7 +10,7 @@ using Quaternion = UnityEngine.Quaternion;
 
 namespace ProBridge.Tx.Tf
 {
-    [AddComponentMenu("ProBridge/Tf/Sender")]
+    [AddComponentMenu("ProBridge/Tx/Tf/Sender")]
     public class TfSender : ProBridgeSingletone<TfSender>
     {
         #region Inspector
