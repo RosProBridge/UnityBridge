@@ -1,4 +1,5 @@
 using System;
+using nav_msgs.msg;
 using UnityEngine;
 using ProBridge.Utils;
 
@@ -6,7 +7,7 @@ namespace ProBridge.Tx.Nav
 {
     [AddComponentMenu("ProBridge/Tx/Nav/Odometry")]
     [RequireComponent(typeof(Rigidbody))]
-    public class Odometry : ProBridgeTxStamped<nav_msgs.msg.Odometry>
+    public class OdometryTx : ProBridgeTxStamped<Odometry>
     {
         public string childFrameId;
         public bool originInStartPos;
