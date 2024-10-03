@@ -2,7 +2,7 @@
 
 namespace ProBridge.Tx.Tf
 {
-    [AddComponentMenu("ProBridge/Tx/Tf/Link")]
+    [AddComponentMenu("ProBridge/Tx/tf2_msgs/Link")]
     public class TfLink : MonoBehaviour
     {
         public string frame_id = "";

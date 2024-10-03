@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace ProBridge.Tx
 {
-    [AddComponentMenu("ProBridge/Tx/Clock")]
+    [AddComponentMenu("ProBridge/Tx/rosgraph_msgs/Clock")]
     public class ClockTx : ProBridgeTx<Clock>
     {
         protected override ProBridge.Msg GetMsg(TimeSpan ts)
