@@ -5,7 +5,7 @@ using ProBridge.Utils;
 
 namespace ProBridge.Tx.Geometry
 {
-    [AddComponentMenu("ProBridge/Tx/Geometry/PoseStamped")]
+    [AddComponentMenu("ProBridge/Tx/geometry_msgs/PoseStamped")]
     public class PoseStampedTx : ProBridgeTxStamped<PoseStamped>
     {
         public bool globalPose;

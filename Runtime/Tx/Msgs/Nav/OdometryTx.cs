@@ -5,7 +5,7 @@ using ProBridge.Utils;
 
 namespace ProBridge.Tx.Nav
 {
-    [AddComponentMenu("ProBridge/Tx/Nav/Odometry")]
+    [AddComponentMenu("ProBridge/Tx/nav_msgs/Odometry")]
     [RequireComponent(typeof(Rigidbody))]
     public class OdometryTx : ProBridgeTxStamped<Odometry>
     {
