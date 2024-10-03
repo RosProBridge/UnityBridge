@@ -31,7 +31,6 @@
       - [Optional: Implement the `IStamped` Interface](#6-optional-implement-the-istamped-interface)
       - [Add the Class to the Appropriate Namespace](#7-add-the-class-to-the-appropriate-namespace)
     - [Example: Creating a New Message Class](#example-creating-a-new-message-class)
-    - [Quick Method for Creating New Messages](#quick-method-for-creating-new-messages)
 
 </details>
 
@@ -43,19 +42,21 @@ The ProBridge system consists of two main components that should be added to you
 
 ### ProBridgeServer
 
-You only need a single `ProBridgeServer` component in your scene. This component is responsible for receiving messages from external sources. It requires three parameters:
+The `ProBridgeServer` component handles incoming messages from external sources. Only one instance is needed per scene. It requires the following parameters:
 
-- **IP**: The IP address on which the server will listen for incoming messages.
-- **Port**: The port number on which the server will listen.
-- **Queue Buffer**: The size of the buffer that manages incoming message queues.
+- **IP**: The IP address for the server to listen on. (Use your machine's IP if on a network, or `localhost` (127.0.0.1) if you are running the system locally.)
+- **Port**: The port number on which the server listens.
+- **Queue Buffer**: The buffer size that controls the queue of incoming messages.
 
-These parameters determine how and where the ProBridgeServer listens for incoming ROS messages.
+These settings determine how and where the `ProBridgeServer` listens for incoming ROS messages.
+
+> **Note:** Adding `ProBridgeServer` to your scene automatically includes an `InitializationManager`, which is essential for the system to function properly.
 
 ### ProBridgeHost
 
 The `ProBridgeHost` component acts as your publisher in the scene. Unlike the `ProBridgeServer`, you can have multiple `ProBridgeHost` components to handle different IPs and ports. Each `ProBridgeHost` requires two parameters:
 
-- **IP**: The IP address to which the host will send messages.
+- **IP**: The IP address to which the host will send messages. (Use the recipient machine's IP if on a network, or `localhost` (127.0.0.1) if you are running the system locally.)
 - **Port**: The port number used for publishing messages.
 
 This setup allows you to send ROS messages to multiple destinations by configuring different hosts.
@@ -79,7 +80,7 @@ For publishers, there are several parameters you need to adjust:
 - **Host**: A reference to the `ProBridgeHost` you want to use for publishing. This links your publisher to a specific host configuration.
 - **Send Rate**: The interval between consecutive messages, specified in seconds. This controls how frequently messages are sent.
 - **Topic**: The name of the ROS topic that the publisher will send messages to.
-- **Compression Level**: The level of compression to apply to the ROS messages (Note: This feature is currently not functional).
+- **Compression Level**: The level of compression to apply to the ROS messages.
 - **QOS**: Quality of Service settings, applicable only for ROS2. This parameter allows you to configure the reliability and durability of the message delivery.
 
 You can find the subscribers by checking the `Runtime/Tx/Msgs` directory or if you want to create your own subscriber see [Creating Custom Publishers](#creating-custom-publishers)
@@ -105,6 +106,8 @@ see [Creating New Message Classes](#creating-new-message-classes).
 To create a custom publisher, define a new class that inherits from one of the base classes mentioned above. This class
 will be responsible for gathering data, populating the message, and sending it through the ProBridge.
 
+> Note: It is recommended to suffix publisher class names with `Tx` for consistency and clarity.
+
 Example:
 
 ```csharp
@@ -115,7 +118,7 @@ using ProBridge.Utils;
 namespace ProBridge.Tx.Custom
 {
     [AddComponentMenu("ProBridge/Tx/Custom/MyCustomPublisher")]
-    public class MyCustomPublisher : ProBridgeTx<ROS.Msgs.Custom.MyCustomMsg>
+    public class MyCustomPublisherTx : ProBridgeTx<ROS.Msgs.Custom.MyCustomMsg>
     {
         // Add fields to store data that you want to publish
         public float customData;
@@ -151,7 +154,7 @@ correct timestamp. You only need to focus on the specific data fields.
 Example:
 
 ```csharp
-public class MyStampedPublisher : ProBridgeTxStamped<ROS.Msgs.Custom.MyStampedMsg>
+public class MyStampedPublisherTx : ProBridgeTxStamped<ROS.Msgs.Custom.MyStampedMsg>
 {
     protected override ProBridge.Msg GetMsg(TimeSpan ts)
     {
@@ -188,6 +191,8 @@ see [Creating New Message Classes](#creating-new-message-classes).
 To create a custom subscriber, define a new class that inherits from `ProBridgeRx<T>`. This class will be responsible
 for processing the incoming ROS messages on a specific topic.
 
+> Note: It is recommended to suffix subscriber class names with `Rx` for consistency and clarity.
+
 Example:
 
 ```csharp
@@ -196,7 +201,7 @@ using ProBridge.Rx;
 
 namespace ProBridge.Rx.Custom
 {
-    public class MyCustomSubscriber : ProBridgeRx<ROS.Msgs.Custom.MyCustomMsg>
+    public class MyCustomSubscriberRx : ProBridgeRx<ROS.Msgs.Custom.MyCustomMsg>
     {
         protected override void OnMessage(MyCustomMsg msg)
         {
@@ -222,7 +227,7 @@ Alternatively, set the topic in the Unity Inspector after attaching the script t
 
 ### Example: Custom Clock Subscriber
 
-Here is a complete example of a custom subscriber similar to the provided `ClockRx` class:
+Here is a complete example of a custom subscriber:
 
 ```csharp
 using UnityEngine;
@@ -244,7 +249,7 @@ namespace ProBridge.Rx
 ### Overview
 
 In the context of ProBridge, message classes are data classes that resemble ROS message types (rosmsg). These classes
-are necessary for the ProBridge to send messages of the corresponding types. This guide provides instructions on how to
+are necessary for the ProBridge to send or receive messages of the corresponding types. This guide provides instructions on how to
 create new message classes based on the existing structure.
 
 ### Step-by-Step Guide
@@ -257,24 +262,24 @@ implementing the `GetRosType()` method, which returns the ROS type string corres
 Example:
 
 ```csharp
-using System;
-using ProBridge.ROS.Msgs;
-
-namespace ProBridge.ROS.Msgs.Custom
+namespace custom_msgs
 {
-    public class CustomMsg : IRosMsg
+    namespace msg
     {
+      public class CustomMsg : IRosMsg
+      {
         // Define the data fields of the message
         public float customField1;
         public int customField2;
         public string customField3;
-
+  
         // Implement the GetRosType method to return the corresponding ROS message type string
         public string GetRosType()
         {
             return "custom_msgs.msg.CustomMsg";
         }
-    }
+      }
+   }
 }
 ```
 
@@ -322,6 +327,8 @@ For complex data types, such as vectors, points, or orientations, use the provid
 like `Vector3`, `Quaternion`, `Point`, etc. These classes are designed to encapsulate the complex data structures used
 in ROS messages, ensuring compatibility and ease of use.
 
+> Note: Ensure you use the ProBridge implementation of these classes. For example, the Unity version of `Vector3` will not work.
+
 Example:
 
 ```csharp
@@ -351,19 +358,24 @@ public class CustomStampedMsg : IRosMsg, IStamped
 }
 ```
 
+
+
 #### 7. **Add the Class to the Appropriate Namespace**
 
-Place your new message class within the appropriate namespace, typically under `ProBridge.ROS.Msgs.<Package>`. This
-organization ensures that your message classes are easy to locate and maintain.
+If you are adding the message `custom_msgs.msg.CustomStampedMsg`, you need to place it in the `custom_msgs` namespace, followed by the `msg` namespace.
 
 Example:
 
 ```csharp
-namespace ProBridge.ROS.Msgs.Custom
+namespace custom_msgs
 {
-    // Your message class here
+    namespace msg
+    {
+        // Your message class here
+    }
 }
 ```
+
 
 ### Example: Creating a New Message Class
 
@@ -371,33 +383,23 @@ namespace ProBridge.ROS.Msgs.Custom
 using System;
 using ProBridge.ROS.Msgs;
 
-namespace ProBridge.ROS.Msgs.Custom
+namespace custom_msgs
 {
-    public class ExampleMsg : IRosMsg
+    namespace msg
     {
-        public string name;
-        public int id;
-        public Time timestamp = new Time();
-        public Vector3 position = new Vector3();
-        public Quaternion orientation = new Quaternion();
-
-        public string GetRosType()
+        public class ExampleMsg : IRosMsg
         {
-            return "custom_msgs.msg.ExampleMsg";
+            public string name;
+            public int id;
+            public Time timestamp = new Time();
+            public Vector3 position = new Vector3();
+            public Quaternion orientation = new Quaternion();
+    
+            public string GetRosType()
+            {
+                return "custom_msgs.msg.ExampleMsg";
+            }
         }
     }
 }
 ```
-
-### Quick Method for Creating New Messages
-
-A convenient way to create new message classes is by using ChatGPT with the following prompt:
-
-*"Based on these classes, can you write a class
-for [Insert full ROS message name here]: [Paste the contents of RosMsgs.cs here]."*
-
-However, it’s important to verify the generated class against
-the [official ROS documentation](https://docs.ros2.org/latest/api/sensor_msgs/index-msg.html) to ensure the correct
-order and types of variables are used. Additionally, if the message includes member variables that are instances of
-unimplemented ROS subclasses, you’ll need to implement those first. For example, you would need to implement
-the `NavSatStatus` class before creating the `NavSatFix` class.
