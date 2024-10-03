@@ -1,11 +1,12 @@
 using System;
+using geometry_msgs.msg;
 using UnityEngine;
 using ProBridge.Utils;
 
 namespace ProBridge.Tx.Geometry
 {
     [AddComponentMenu("ProBridge/Tx/Geometry/PoseStamped")]
-    public class PoseStamped : ProBridgeTxStamped<geometry_msgs.msg.PoseStamped>
+    public class PoseStampedTx : ProBridgeTxStamped<PoseStamped>
     {
         public bool globalPose;
 
