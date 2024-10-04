@@ -41,8 +41,8 @@ namespace ProBridge.Utils
                     out lon,
                     out alt, M);
         }
-        /*
-        public static Vector3 Global2Local(Vector3d global, Vector3d origin)
+        
+        public static Vector3 Global2Local(Vector3 global, Vector3 origin)
         {
             LocalCartesian(origin.x, // origin.Latitude
                            origin.y, // origin.Longitude
@@ -68,7 +68,7 @@ namespace ProBridge.Utils
 
             return local;
         }
-    */
+        
         static double WGS84_a()
         {
             return 6378137.0;
