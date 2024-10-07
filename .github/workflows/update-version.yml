@@ -79,7 +79,7 @@ jobs:
             git config user.email "actions@github.com"
             git add package.json
             git commit -m "Bump package version to $NEW_VERSION"
-            git push origin main
+            git push origin master
           else
             echo "No changes to commit"
           fi
