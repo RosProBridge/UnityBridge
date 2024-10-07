@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Collections;
 using ProBridge.Utils;
 using System.Collections.Generic;
-using System.Threading;
 using geometry_msgs.msg;
 using std_msgs;
 using tf2_msgs.msg;
@@ -34,6 +34,7 @@ namespace ProBridge.Tx.Tf
         private long _lastSimTime = 0;
         private List<TfLink> _links = new List<TfLink>();
         private TransformStamped[] staticTransforms;
+        private bool sendStaticMsgRequest = false;
 
         public void CallRepeatingMethods()
         {
@@ -55,6 +56,11 @@ namespace ProBridge.Tx.Tf
             }
 
             staticTransforms = GetTransforms(true);
+            if (sendStaticMsgRequest)
+            {
+                sendStaticMsgRequest = false;
+                StartCoroutine(StaticSendingCoroutine());
+            }
         }
 
         private TransformStamped[] GetTransforms(bool staticTransforms = false)
@@ -97,10 +103,19 @@ namespace ProBridge.Tx.Tf
         {
             /*
              * At present, the only available event is ZMQ_EVENT_ACCEPTED. However, this event doesn't
-             * guarantee that the subscriber is ready to receive messages. As a workaround, we're using a delay (sleep) here.
+             * guarantee that the subscriber is ready to receive messages. As a workaround, making a request to start a coroutine on the
+             * main thread, this coroutine does regular checks until staticTransforms are ready.
              * A more reliable solution would be to use ZMQ_EVENT_HANDSHAKE_SUCCEED, but this event is not yet available in NetMQ.
              */
-            Thread.Sleep(300);
+            sendStaticMsgRequest = true;
+        }
+        
+        private IEnumerator StaticSendingCoroutine()
+        {
+            while(_lastSimTime >= ProBridgeServer.SimTime.Ticks)
+            {
+                yield return new WaitForSeconds(0.1f);
+            }
             Debug.Log("Connected to a new subscriber. Sending static!");
             SendMsg(true);
         }
