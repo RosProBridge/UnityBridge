@@ -1,0 +1,85 @@
+name: Update Package Version
+
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  update-version:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install jq (JSON processor)
+        run: sudo apt-get install -y jq
+
+      - name: Detect version bump type
+        id: detect_version
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          # Default to patch version bump
+          VERSION_BUMP="patch"
+
+          # Check the PR title to determine the version type
+          if echo "$PR_TITLE" | grep -iq "BREAKING CHANGE"; then
+            VERSION_BUMP="major"
+          elif echo "$PR_TITLE" | grep -iq "^feat"; then
+            VERSION_BUMP="minor"
+          fi
+
+          echo "Version bump type: $VERSION_BUMP"
+          echo "version_bump=$VERSION_BUMP" >> $GITHUB_OUTPUT
+
+      - name: Update package version
+        env:
+          VERSION_BUMP: ${{ steps.detect_version.outputs.version_bump }}
+        run: |
+          # Get the current version from package.json
+          CURRENT_VERSION=$(jq -r '.version' package.json)
+          
+          # Split version into major, minor, patch
+          IFS='.' read -r -a VERSION_PARTS <<< "$CURRENT_VERSION"
+          MAJOR=${VERSION_PARTS[0]}
+          MINOR=${VERSION_PARTS[1]}
+          PATCH=${VERSION_PARTS[2]}
+
+          # Determine the new version based on the bump type
+          if [ "$VERSION_BUMP" = "major" ]; then
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+          elif [ "$VERSION_BUMP" = "minor" ]; then
+            MINOR=$((MINOR + 1))
+            PATCH=0
+          else
+            PATCH=$((PATCH + 1))
+          fi
+
+          # Create new version string
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          
+          # Update the version in package.json
+          jq --arg new_version "$NEW_VERSION" '.version = $new_version' package.json > tmp.json && mv tmp.json package.json
+
+          # Commit the updated package.json if there are changes
+          if [ -n "$(git status --porcelain)" ]; then
+            git config user.name "GitHub Actions"
+            git config user.email "actions@github.com"
+            git add package.json
+            git commit -m "Bump package version to $NEW_VERSION"
+            git push origin main
+          else
+            echo "No changes to commit"
+          fi
