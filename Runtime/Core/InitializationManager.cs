@@ -1,8 +1,5 @@
 ﻿using System;
-using NetMQ;
-using NetMQ.Monitoring;
 using NetMQ.Sockets;
-using ProBridge.Tx;
 using ProBridge.Tx.Tf;
 using UnityEngine;
 
