@@ -40,7 +40,7 @@ namespace ProBridge.Tx.Tf
             InvokeRepeating("UpdateTree", 0, 0.9f);
             InvokeRepeating("SendDynamicMsg", 1, sendRate);
         }
-        
+
         private void OnDisable()
         {
             CancelInvoke("SendMsg");
@@ -53,6 +53,7 @@ namespace ProBridge.Tx.Tf
                 _links.Clear();
                 _links.AddRange(FindObjectsOfType<TfLink>());
             }
+
             staticTransforms = GetTransforms(true);
         }
 
@@ -100,7 +101,7 @@ namespace ProBridge.Tx.Tf
              * A more reliable solution would be to use ZMQ_EVENT_HANDSHAKE_SUCCEED, but this event is not yet available in NetMQ.
              */
             Thread.Sleep(300);
-            Debug.Log("Sending static!");
+            Debug.Log("Connected to a new subscriber. Sending static!");
             SendMsg(true);
         }
 
@@ -118,12 +119,13 @@ namespace ProBridge.Tx.Tf
                 return;
             }
 
-            if(!staticT) _lastSimTime = st;
+            if (!staticT) _lastSimTime = st;
 
             if (Active && Bridge != null)
             {
                 var data = new TFMessage();
                 data.transforms = staticT ? staticTransforms : GetTransforms();
+                if (data.transforms.Length == 0) return;
 
                 var msg = new ProBridge.Msg()
                 {
@@ -132,7 +134,7 @@ namespace ProBridge.Tx.Tf
 #else
                     v = 1,
 #endif
-                    n = staticT? staticTopic : dynamicTopic,
+                    n = staticT ? staticTopic : dynamicTopic,
                     t = (data as IRosMsg).GetRosType(),
                     c = compressionLevel,
 #if ROS_V2
