@@ -82,7 +82,7 @@ namespace ProBridge
         public void Dispose()
         {
             _active = false;
-            // _socket.Close();
+            _pullSocket.Close();
             NetMQConfig.Cleanup(
                 false); // Must be here to work more than once, and false to not block when there are unprocessed messages.
             if (_th != null)
