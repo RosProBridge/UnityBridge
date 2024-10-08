@@ -12,7 +12,6 @@ namespace ProBridge.Utils
     public static class CDRSerializer
     {
 
-        private static IArrayToBytesJob _arrayToBytesJob;
         
 #if ROS_V2
         // Used to add alignment and string terminator incase of ROS2
@@ -154,19 +153,7 @@ namespace ProBridge.Utils
 
             if (itemType == typeof(byte))
             {
-                NativeArray<byte> tmpOutput = new NativeArray<byte>(array.Length * 1, Allocator.TempJob);
-                NativeArray<byte> tmpInput = new NativeArray<byte>((byte[])array, Allocator.TempJob);
-                _arrayToBytesJob = new IArrayToBytesJob()
-                {
-                    items = tmpInput,
-                    itemSize = 1,
-                    serialized = tmpOutput
-                };
-                var jobHandle = _arrayToBytesJob.Schedule(array.Length, 2048);
-                jobHandle.Complete();
-                writer.Write(tmpOutput.ToArray());
-                tmpOutput.Dispose();
-                tmpInput.Dispose();
+                writer.Write((byte[])array);
             }
             else
                 foreach (var item in array)
@@ -175,10 +162,6 @@ namespace ProBridge.Utils
                     {
                         writer.Write((bool)item);
                     }
-                    // else if (itemType == typeof(byte))
-                    // {
-                    //     writer.Write((byte)item);
-                    // }
                     else if (itemType == typeof(sbyte))
                     {
                         writer.Write((sbyte)item);
