@@ -26,7 +26,17 @@ namespace geometry_msgs
                 return new Vector3() { x = value.x, y = value.y, z = value.z };
             }
         }
+        public class Point32 : IRosMsg
+        {
+            string IRosMsg.GetRosType()
+            {
+                return "geometry_msgs.msg.Point32";
+            }
 
+            public float x { get; set; }
+            public float y { get; set; }
+            public float z { get; set; }
+        }
         public class Vector3 : IRosMsg
         {
             string IRosMsg.GetRosType()
@@ -139,6 +149,29 @@ namespace geometry_msgs
             public Twist twist = new Twist();
             public double[] covariance = new double[36];
         }
+        public class Accel : IRosMsg
+        {
+            string IRosMsg.GetRosType()
+            {
+                return "geometry_msgs.msg.Accel";
+            }
+
+            public Vector3 linear = new Vector3();
+            public Vector3 angular = new Vector3();
+        }
+
+        public class AccelWithCovariance : IRosMsg
+        {
+            string IRosMsg.GetRosType()
+            {
+                return "geometry_msgs.msg.AccelWithCovariance";
+            }
+
+            public Accel accel = new Accel();
+            public double[] covariance = new double[36];
+        }
+
+
 
         public class Transform : IRosMsg
         {
@@ -161,6 +194,14 @@ namespace geometry_msgs
             public Header header { get; set; } = new Header();
             public string child_frame_id;
             public Transform transform = new Transform();
+        }
+        public class Polygon : IRosMsg
+        {
+            string IRosMsg.GetRosType()
+            {
+                return "geometry_msgs.msg.Polygon";
+            }
+            public Point32[] points;
         }
     }
 }
