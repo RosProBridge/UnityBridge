@@ -8,7 +8,7 @@ using NetMQ.Monitoring;
 namespace ProBridge
 {
     [AddComponentMenu("ProBridge/Host")]
-    public class ProBridgeHost : MonoBehaviour
+    public class ProBridgeHost : MonoBehaviour, IDisposable
     {
         public string addr = "127.0.0.1";
         public int port = 47778;
@@ -30,18 +30,13 @@ namespace ProBridge
             monitor.StartAsync();
         }
 
-        private void OnDisable()
+        public void Dispose()
         {
             pushSocket.Close();
             pushSocket?.Dispose();
 
             monitor.Stop();
             monitor?.Dispose();
-        }
-
-        private void OnDestroy()
-        {
-            NetMQConfig.Cleanup(false); // Must be here to work more than once, and false to not block when there are unprocessed messages.
         }
     }
 }
