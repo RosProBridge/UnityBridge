@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -11,12 +10,16 @@ namespace ProBridge
     public class ProBridgeServer : ProBridgeSingletone<ProBridgeServer>
     {
         [Serializable]
-        public class MsgEvent : UnityEvent<ProBridge.Msg> { }
+        public class MsgEvent : UnityEvent<ProBridge.Msg>
+        {
+        }
 
         #region Inspector
+
         public string ip = "127.0.0.1";
         public int port = 47777;
         public int queueBuffer = 100;
+
         #endregion
 
         public MsgEvent MessageEvent { get; } = new MsgEvent();
@@ -47,9 +50,9 @@ namespace ProBridge
                 firstFrame = true;
                 _initTime = DateTime.UtcNow.Ticks;
             }
-            
+
             SimTime = new TimeSpan(_initTime + (long)(Time.fixedTime * TimeSpan.TicksPerSecond));
-            
+
             Bridge.TryReceive();
 
             while (_queue.Count > 0)
