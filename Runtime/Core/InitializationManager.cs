@@ -1,4 +1,5 @@
 ﻿using System;
+using NetMQ;
 using NetMQ.Sockets;
 using ProBridge.Tx.Tf;
 using UnityEngine;
@@ -70,6 +71,21 @@ namespace ProBridge
             {
                 host.SetupMonitor();
             }
+        }
+
+        private void OnDestroy()
+        {
+            // De-init hosts sockets
+            foreach (var host in _hosts)
+            {
+                host.Dispose();
+            }
+            
+            // De-init server
+            _server.Dispose();
+            
+            // NetMQ cleanup
+            NetMQConfig.Cleanup(false);
         }
     }
 }
