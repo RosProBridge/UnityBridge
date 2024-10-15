@@ -10,28 +10,38 @@ namespace ProBridge.Tx.Nav
     public class OdometryTx : ProBridgeTxStamped<Odometry>
     {
         public string childFrameId;
-        public bool originInStartPos;
-
+        public bool localOrigin = false;
+        public Transform startPose;
         public float[] covariancePose = new float[6] { 0.001f, 0.001f, 0.001f, 0.001f, 0.001f, 0.001f };
         public float[] covarianceTwist = new float[6] { 0.001f, 0.001f, 0.001f, 0.001f, 0.001f, 0.001f };
-
         public Rigidbody Body { get; private set; }
-        private Vector3 _startPos;
-
+        private Vector3 _startPose;
+        private Quaternion _startRotation;
         protected override void OnStart()
         {
             Body = GetComponent<Rigidbody>();
-            _startPos = originInStartPos ? transform.position : Vector3.zero;
+
+            if (localOrigin)
+            {
+                _startPose = transform.position;
+                _startRotation = transform.rotation;
+            }
         }
 
         protected override ProBridge.Msg GetMsg(TimeSpan ts)
         {
             data.child_frame_id = childFrameId;
+            if (localOrigin)
+            {
+                data.pose.pose.position = (Quaternion.Inverse(_startRotation) * (Body.position - _startPose)).ToRos();
+                data.pose.pose.orientation = (Quaternion.Inverse(_startRotation) * Body.rotation).ToRos();
+            }
+            else
+            {
+                data.pose.pose.position = startPose.InverseTransformPoint(Body.position).ToRos();
+                data.pose.pose.orientation = (Quaternion.Inverse(startPose.rotation) * Body.rotation).ToRos();
+            }
 
-            var p = Body.position - _startPos;
-            //data.pose.pose.position = new Vector3(-p.z, p.y, p.x).ToRos();
-            data.pose.pose.position = p.ToRos();
-            data.pose.pose.orientation = Body.rotation.ToRos();
             data.pose.covariance[0] = covariancePose[0];
             data.pose.covariance[7] = covariancePose[1];
             data.pose.covariance[14] = covariancePose[2];
@@ -46,7 +56,6 @@ namespace ProBridge.Tx.Nav
             data.twist.covariance[21] = covarianceTwist[3];
             data.twist.covariance[28] = covarianceTwist[4];
             data.twist.covariance[35] = covarianceTwist[5];
-
             return base.GetMsg(ts);
         }
     }
