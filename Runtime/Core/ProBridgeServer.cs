@@ -7,7 +7,7 @@ namespace ProBridge
 {
     [AddComponentMenu("ProBridge/Server")]
     [RequireComponent(typeof(InitializationManager))]
-    public class ProBridgeServer : ProBridgeSingletone<ProBridgeServer>
+    public class ProBridgeServer : ProBridgeSingletone<ProBridgeServer>, IDisposable
     {
         [Serializable]
         public class MsgEvent : UnityEvent<ProBridge.Msg>
@@ -31,7 +31,7 @@ namespace ProBridge
         private Queue<ProBridge.Msg> _queue = new Queue<ProBridge.Msg>();
         [HideInInspector] public long _initTime;
 
-        public void OnDestroy()
+        public void Dispose()
         {
             if (Bridge != null)
             {

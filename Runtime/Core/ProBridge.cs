@@ -83,8 +83,6 @@ namespace ProBridge
         {
             _active = false;
             _pullSocket.Close();
-            NetMQConfig.Cleanup(
-                false); // Must be here to work more than once, and false to not block when there are unprocessed messages.
             if (_th != null)
             {
                 if (_th.Join(1000))
