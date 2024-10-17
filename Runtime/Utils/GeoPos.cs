@@ -42,7 +42,7 @@ namespace ProBridge.Utils
                     out alt, M);
         }
         
-        public static Vector3 Global2Local(Vector3 global, Vector3 origin)
+        public static Vector3 Global2Local(Vector3d global, Vector3d origin)
         {
             LocalCartesian(origin.x, // origin.Latitude
                            origin.y, // origin.Longitude
@@ -472,6 +472,19 @@ namespace ProBridge.Utils
         static double AngNormalize(double x)
         {
             return x >= 180 ? x - 360 : (x < -180 ? x + 360 : x);
+        }
+    }
+
+    public class Vector3d
+    {
+        public double x;
+        public double y;
+        public double z;
+        public Vector3d(double x, double y, double z)
+        {
+            this.x = x;
+            this.y = y;
+            this.z = z;
         }
     }
 }
