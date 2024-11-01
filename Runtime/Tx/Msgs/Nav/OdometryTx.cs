@@ -9,7 +9,7 @@ namespace ProBridge.Tx.Nav
     public class OdometryTx : ProBridgeTxStamped<Odometry>
     {
         public string childFrameId;
-        public bool localOrigin= false;
+        public bool localOrigin = false;
         public Transform startPos;
         public float[] covariancePose = new float[6] { 0.001f, 0.001f, 0.001f, 0.001f, 0.001f, 0.001f };
         public float[] covarianceTwist = new float[6] { 0.001f, 0.001f, 0.001f, 0.001f, 0.001f, 0.001f };
@@ -19,8 +19,8 @@ namespace ProBridge.Tx.Nav
         private Vector3 _previousPosition;
         private Quaternion _previousRotation;
 
-        public Vector3 Velocity = new Vector3(0,0,0);
-        public Vector3 AngularVelocity = new Vector3(0,0,0);
+        public Vector3 Velocity = new Vector3(0, 0, 0);
+        public Vector3 AngularVelocity = new Vector3(0, 0, 0);
 
         protected override void OnStart()
         {
@@ -39,11 +39,11 @@ namespace ProBridge.Tx.Nav
             _previousPosition = transform.position;
 
             Quaternion deltaRotation = transform.rotation * Quaternion.Inverse(_previousRotation);
-            float angle;
-            Vector3 axis;
-            deltaRotation.ToAngleAxis(out angle, out axis);
 
-            AngularVelocity = angle * axis.normalized / Time.fixedDeltaTime;
+            deltaRotation.ToAngleAxis(out var angle, out var axis);
+
+            AngularVelocity = Mathf.Deg2Rad * angle * axis / Time.fixedDeltaTime;
+
             _previousRotation = transform.rotation;
         }
 
@@ -51,7 +51,8 @@ namespace ProBridge.Tx.Nav
         {
             if (localOrigin)
             {
-                data.pose.pose.position = (Quaternion.Inverse(_startRotation) * (transform.position - _startPose)).ToRos();
+                data.pose.pose.position =
+                    (Quaternion.Inverse(_startRotation) * (transform.position - _startPose)).ToRos();
                 data.pose.pose.orientation = (Quaternion.Inverse(_startRotation) * transform.rotation).ToRos();
             }
             else
