@@ -52,12 +52,38 @@ namespace std_msgs
                 return "std_msgs.msg.Float32";
             }
         }
+        [System.Serializable]
+        public class UInt64MultiArray : IRosMsg
+        {
+            string IRosMsg.GetRosType()
+            {
+                return "std_msgs.msg.UInt64MultiArray";
+            }
+
+            /// <summary>
+            /// specification of data layout
+            /// </summary>
+            public MultiArrayLayout layout;
+
+            /// <summary>
+            /// array of data
+            /// </summary>
+            public System.UInt64[] data;
+        }
 
         public class StdFloat64 : StdMsg<double>
         {
             public override string GetRosType()
             {
                 return "std_msgs.msg.Float64";
+            }
+        }
+
+        public class StdUint16 : StdMsg<ushort>
+        {
+            public override string GetRosType()
+            {
+                return "std_msgs.msg.UInt16";
             }
         }
 
