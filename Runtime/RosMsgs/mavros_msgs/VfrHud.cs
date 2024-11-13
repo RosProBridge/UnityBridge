@@ -9,13 +9,22 @@ namespace mavros_msgs
         /// Metrics typically displayed on a HUD for fixed wing aircraft
         /// </summary>
         [System.Serializable]
+
+#if ROS_V2
         public class VfrHud : IRosMsg, IStamped
         {
             public string GetRosType()
             {
                 return "mavros_msgs.msg.VfrHud";
             }
-
+#else
+        public class VFR_HUD : IRosMsg, IStamped
+        {
+            public string GetRosType()
+            {
+                return "mavros_msgs.msg.VFR_HUD";
+            }
+#endif
             public std_msgs.msg.Header header { get; set; } = new std_msgs.msg.Header();
 
             /// <summary>
