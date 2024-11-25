@@ -20,22 +20,22 @@ namespace ProBridge
 
         private Thread monitoringThread;
         private bool shouldStopMonitoring = false;
-        
+
         public void SetupMonitor()
         {
             monitor = new NetMQMonitor(pushSocket, $"inproc://monitor-{addr}:{port}", SocketEvents.All);
             monitor.Connected += (s, e) => onSubscriberConnect?.Invoke(this, e);
-            
+
 
             monitor.StartAsync();
         }
 
         public void Dispose()
         {
-            pushSocket.Close();
+            pushSocket?.Close();
             pushSocket?.Dispose();
 
-            monitor.Stop();
+            monitor?.Stop();
             monitor?.Dispose();
         }
     }
