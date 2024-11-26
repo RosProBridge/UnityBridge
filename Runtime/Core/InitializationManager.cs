@@ -20,56 +20,63 @@ namespace ProBridge
             _server = FindObjectOfType<ProBridgeServer>();
             _hosts = FindObjectsOfType<ProBridgeHost>();
             _tfSender = FindObjectOfType<TfSender>();
-            
-            
-            // Init hosts sockets
-            AsyncIO.ForceDotNet.Force();
-            foreach (var host in _hosts)
-            {
-                host.pushSocket = new PushSocket();
-                host.pushSocket.Connect($"tcp://{host.addr}:{host.port}");
-                host.pushSocket.Options.Linger = new TimeSpan(0, 0, 1);
-            }
-            
-            
-            // Init server
+
             try
             {
-                _server.Bridge = new ProBridge(_server.port, _server.ip);
-                _server.Bridge.onMessageHandler += _server.OnMsg;
-                _server.Bridge.onDebugHandler += _server.OnLogMessage;
-            }
-            catch (Exception ex)
-            {
-                _server.Bridge = null;
-                Debug.Log(ex);
-            }
-            
-            
-            // Init tf sender
-            if(_tfSender != null)
-            {
-                _tfSender.Bridge = _server.Bridge;
-                if (_tfSender.Bridge == null)
+                // Init hosts sockets
+                AsyncIO.ForceDotNet.Force();
+                foreach (var host in _hosts)
                 {
-                    enabled = false;
-                    Debug.LogWarning("ROS bridge server not initialized.");
-                    return;
+                    host.pushSocket = new PushSocket();
+                    host.pushSocket.Connect($"tcp://{host.addr}:{host.port}");
+                    host.pushSocket.Options.Linger = new TimeSpan(0, 0, 1);
                 }
+                
+                
+                // Init server
+                try
+                {
+                    _server.Bridge = new ProBridge(_server.port, _server.ip);
+                    _server.Bridge.onMessageHandler += _server.OnMsg;
+                    _server.Bridge.onDebugHandler += _server.OnLogMessage;
+                }
+                catch (Exception ex)
+                {
+                    _server.Bridge = null;
+                    Debug.Log(ex);
+                }
+                
+                
+                // Init tf sender
+                if(_tfSender != null)
+                {
+                    _tfSender.Bridge = _server.Bridge;
+                    if (_tfSender.Bridge == null)
+                    {
+                        enabled = false;
+                        Debug.LogWarning("ROS bridge server not initialized.");
+                        return;
+                    }
 
-                _tfSender.UpdateTree();
-                _tfSender.host.onSubscriberConnect += _tfSender.SendStaticMsg;
-                _tfSender.CallRepeatingMethods();
+                    _tfSender.UpdateTree();
+                    _tfSender.host.onSubscriberConnect += _tfSender.SendStaticMsg;
+                    _tfSender.CallRepeatingMethods();
+                }
+                else
+                {
+                    Debug.LogWarning("No TFSender found in scene.");
+                }
+                
+                // Init host monitors
+                foreach (var host in _hosts)
+                {
+                    host.SetupMonitor();
+                }
             }
-            else
+            catch (Exception e)
             {
-                Debug.LogWarning("No TFSender found in scene.");
-            }
-            
-            // Init host monitors
-            foreach (var host in _hosts)
-            {
-                host.SetupMonitor();
+                Debug.Log("Failed to setup ProBridge: " + e);
+                OnDestroy();
             }
         }
 
@@ -78,11 +85,11 @@ namespace ProBridge
             // De-init hosts sockets
             foreach (var host in _hosts)
             {
-                host.Dispose();
+                host?.Dispose();
             }
             
             // De-init server
-            _server.Dispose();
+            _server?.Dispose();
             
             // NetMQ cleanup
             NetMQConfig.Cleanup(false);
