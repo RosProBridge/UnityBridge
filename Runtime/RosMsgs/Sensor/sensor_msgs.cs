@@ -154,7 +154,6 @@ namespace sensor_msgs
             public byte position_covariance_type;
         }
 
-
         public class CompressedImage : IRosMsg, IStamped
         {
             string IRosMsg.GetRosType()
@@ -343,6 +342,52 @@ namespace sensor_msgs
             /// actual matrix data, size is (step * rows)
             /// </summary>
             public byte[] data;
+        }
+
+        public class Range : IRosMsg, IStamped
+        {
+            string IRosMsg.GetRosType()
+            {
+                return "sensor_msgs.msg.Range";
+            }
+
+            public const byte ULTRASOUND = 0;
+            public const byte INFRARED = 1;
+
+            public Header header { get; set; } = new Header();
+
+            /// <summary>
+            /// the type of radiation used by the sensor (sound, IR, etc) [enum]
+            /// </summary>
+            public byte radiation_type;
+
+            /// <summary>
+            /// the size of the arc that the distance reading is valid for [rad]
+            /// <para> the object causing the range reading may have been anywhere within -field_of_view/2 and
+            /// field_of_view/2 at the measured range.</para>
+            /// 0 angle corresponds to the x-axis of the sensor.<br/>
+            /// </summary>
+            public float field_of_view;
+
+            /// <summary>
+            /// minimum range value [m]
+            /// </summary>
+            public float min_range;
+
+            /// <summary>
+            /// maximum range value [m]
+            /// <para>Fixed distance rangers require min_range==max_range</para>
+            /// </summary>
+            public float max_range;
+
+            /// <summary>
+            /// range data [m]
+            /// <para>(Note: values &lt; range_min or &gt; range_max  should be discarded)</para>
+            /// <para>Fixed distance rangers only output -Inf or +Inf.</para>
+            /// -Inf represents a detection within fixed distance. (Detection too close to the sensor to quantify)<br/>
+            /// +Inf represents no detection within the fixed distance. (Object out of range)<br/>
+            /// </summary>
+            public float range;
         }
     }
 }
