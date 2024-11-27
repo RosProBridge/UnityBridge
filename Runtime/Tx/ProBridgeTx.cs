@@ -33,6 +33,8 @@ namespace ProBridge.Tx
 
         private bool initialized;
 
+        private bool sentHostMissingMsg;
+
         private void Start()
         {
             if (Bridge == null)
@@ -69,6 +71,15 @@ namespace ProBridge.Tx
 
         protected void SendMsg()
         {
+            if (!host)
+            {
+                if(!sentHostMissingMsg) Debug.LogWarning($"No host assigned for topic {topic}.");
+                sentHostMissingMsg = true;
+                return;
+            }
+
+            sentHostMissingMsg = false;
+            
             var st = ProBridgeServer.SimTime.Ticks;
             if (_lastSimTime >= st)
             {
