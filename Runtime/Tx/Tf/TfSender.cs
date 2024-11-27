@@ -18,7 +18,9 @@ namespace ProBridge.Tx.Tf
         public ProBridgeHost host;
         public float sendRate = 0.1f;
         [Range(0, 2)] public int compressionLevel = 0;
+        public bool sendDynamic = true;
         public string dynamicTopic = "/tf";
+        public bool sendStatic = true;
         public string staticTopic = "/tf_static";
 #if ROS_V2
         [Header("Dynamic QOS")] public Qos dynamicQos;
@@ -59,7 +61,7 @@ namespace ProBridge.Tx.Tf
             if (sendStaticMsgRequest)
             {
                 sendStaticMsgRequest = false;
-                StartCoroutine(StaticSendingCoroutine());
+                if(sendStatic) StartCoroutine(StaticSendingCoroutine());
             }
         }
 
@@ -122,7 +124,7 @@ namespace ProBridge.Tx.Tf
 
         protected void SendDynamicMsg()
         {
-            SendMsg();
+            if(sendDynamic) SendMsg();
         }
 
         protected void SendMsg(bool staticT = false)
