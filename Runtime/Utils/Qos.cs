@@ -105,6 +105,18 @@ public class Qos
         }
     }
 
+    public static JObject GetLatchQos()
+    {
+        return new JObject
+    {
+        { "reliability", 2},
+        { "history", 1},
+        { "depth", 100 },
+        { "durability", 1 },
+        { "liveliness", 1}
+    };
+    }
+
     public object GetValue()
     {
         if (qosType == QOSType.Int) return intQos;

@@ -6,14 +6,24 @@ namespace ProBridge.Tx.Tf
     public class TfLink : MonoBehaviour
     {
         public string frame_id = "";
-        public bool fixed_frame;
         public bool is_static = false;
         public TfLink[] children = new TfLink[0];
 
-        public void Start()
+        private TfSender __sender;
+
+        private void Awake()
         {
-            if (fixed_frame)
-                transform.parent = null;
+            __sender = FindObjectOfType<TfSender>();
+        }
+
+        private void OnEnable()
+        {
+            __sender?.LinkAdd(this);
+        }
+
+        private void OnDisable()
+        {
+            __sender?.LinkRemove(this);
         }
     }
 }

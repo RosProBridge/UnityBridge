@@ -58,7 +58,6 @@ namespace ProBridge
                         return;
                     }
 
-                    _tfSender.UpdateTree();
                     _tfSender.host.onSubscriberConnect += _tfSender.SendStaticMsg;
                     _tfSender.CallRepeatingMethods();
                 }

@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 using NetMQ;
 using UnityEngine;
 using NetMQ.Sockets;
@@ -14,19 +13,13 @@ namespace ProBridge
         public int port = 47778;
 
         [HideInInspector] public PushSocket pushSocket;
-
         public event EventHandler onSubscriberConnect;
         private NetMQMonitor monitor;
-
-        private Thread monitoringThread;
-        private bool shouldStopMonitoring = false;
 
         public void SetupMonitor()
         {
             monitor = new NetMQMonitor(pushSocket, $"inproc://monitor-{addr}:{port}", SocketEvents.All);
             monitor.Connected += (s, e) => onSubscriberConnect?.Invoke(this, e);
-
-
             monitor.StartAsync();
         }
 

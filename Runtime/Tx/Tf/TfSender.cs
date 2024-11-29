@@ -7,6 +7,7 @@ using std_msgs;
 using tf2_msgs.msg;
 using UnityEngine;
 using Quaternion = UnityEngine.Quaternion;
+using Newtonsoft.Json.Linq;
 
 namespace ProBridge.Tx.Tf
 {
@@ -21,8 +22,8 @@ namespace ProBridge.Tx.Tf
         public string dynamicTopic = "/tf";
         public string staticTopic = "/tf_static";
 #if ROS_V2
-        [Header("Dynamic QOS")] public Qos dynamicQos;
-        [Header("Static QOS")] public Qos staticQos;
+        private Qos __dynamicQos = new Qos(10L);
+        private Qos __staticQos = new Qos(Qos.GetLatchQos());
 #endif
 
         #endregion
@@ -33,34 +34,72 @@ namespace ProBridge.Tx.Tf
 
         private long _lastSimTime = 0;
         private List<TfLink> _links = new List<TfLink>();
-        private TransformStamped[] staticTransforms;
-        private bool sendStaticMsgRequest = false;
+        private TransformStamped[] __staticTransforms;
+
+        private bool _needUpdateStaticMsgs = false;
 
         public void CallRepeatingMethods()
         {
-            InvokeRepeating("UpdateTree", 0, 0.9f);
+            InvokeRepeating("UpdateStaticMsgs", 1, 1);
             InvokeRepeating("SendDynamicMsg", 1, sendRate);
         }
 
         private void OnDisable()
         {
-            CancelInvoke("SendMsg");
+            CancelInvoke("SendDynamicMsg");
         }
 
-        public void UpdateTree()
+        public void LinkAdd(TfLink value)
         {
             lock (_links)
             {
-                _links.Clear();
-                _links.AddRange(FindObjectsOfType<TfLink>());
-            }
+                _links.Add(value);
 
-            staticTransforms = GetTransforms(true);
-            if (sendStaticMsgRequest)
+                if (value.is_static)
+                    _needUpdateStaticMsgs = true;
+            }
+        }
+
+        public void LinkRemove(TfLink value)
+        {
+            lock (_links)
             {
-                sendStaticMsgRequest = false;
+                _links.Remove(value);
+                if (value.is_static)
+                    _needUpdateStaticMsgs = true;
+            }
+        }
+
+
+        public void SendStaticMsg(object obj, EventArgs args)
+        {
+            /*
+             * At present, the only available event is ZMQ_EVENT_ACCEPTED. However, this event doesn't
+             * guarantee that the subscriber is ready to receive messages. As a workaround, making a request to start a coroutine on the
+             * main thread, this coroutine does regular checks until staticTransforms are ready.
+             * A more reliable solution would be to use ZMQ_EVENT_HANDSHAKE_SUCCEED, but this event is not yet available in NetMQ.
+             */
+            _needUpdateStaticMsgs = true;
+        }
+
+        private void UpdateStaticMsgs()
+        {
+            if (_needUpdateStaticMsgs)
+            {
+                _needUpdateStaticMsgs = false;
+                __staticTransforms = GetTransforms(true);
                 StartCoroutine(StaticSendingCoroutine());
             }
+        }
+
+        private IEnumerator StaticSendingCoroutine()
+        {
+            while (_lastSimTime >= ProBridgeServer.SimTime.Ticks)
+            {
+                yield return new WaitForSeconds(0.1f);
+            }
+            Debug.Log("Connected to a new subscriber. Sending static!");
+            SendMsg(true);
         }
 
         private TransformStamped[] GetTransforms(bool staticTransforms = false)
@@ -98,28 +137,6 @@ namespace ProBridge.Tx.Tf
             return list.ToArray();
         }
 
-
-        public void SendStaticMsg(object obj, EventArgs args)
-        {
-            /*
-             * At present, the only available event is ZMQ_EVENT_ACCEPTED. However, this event doesn't
-             * guarantee that the subscriber is ready to receive messages. As a workaround, making a request to start a coroutine on the
-             * main thread, this coroutine does regular checks until staticTransforms are ready.
-             * A more reliable solution would be to use ZMQ_EVENT_HANDSHAKE_SUCCEED, but this event is not yet available in NetMQ.
-             */
-            sendStaticMsgRequest = true;
-        }
-        
-        private IEnumerator StaticSendingCoroutine()
-        {
-            while(_lastSimTime >= ProBridgeServer.SimTime.Ticks)
-            {
-                yield return new WaitForSeconds(0.1f);
-            }
-            Debug.Log("Connected to a new subscriber. Sending static!");
-            SendMsg(true);
-        }
-
         protected void SendDynamicMsg()
         {
             SendMsg();
@@ -139,8 +156,10 @@ namespace ProBridge.Tx.Tf
             if (Active && Bridge != null)
             {
                 var data = new TFMessage();
-                data.transforms = staticT ? staticTransforms : GetTransforms();
-                if (data.transforms.Length == 0) return;
+                data.transforms = staticT ? __staticTransforms : GetTransforms();
+
+                if (data.transforms.Length == 0 && staticT == false)
+                    return;
 
                 var msg = new ProBridge.Msg()
                 {
@@ -153,7 +172,7 @@ namespace ProBridge.Tx.Tf
                     t = (data as IRosMsg).GetRosType(),
                     c = compressionLevel,
 #if ROS_V2
-                    q = staticT ? staticQos : dynamicQos,
+                    q = staticT ? __staticQos : __dynamicQos,
 #endif
                     d = data
                 };
