@@ -2,7 +2,6 @@ using System;
 using nav_msgs.msg;
 using UnityEngine;
 using ProBridge.Utils;
-using Utils;
 
 namespace ProBridge.Tx.Nav
 {

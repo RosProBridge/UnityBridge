@@ -1,6 +1,6 @@
 using System;
 
-namespace Utils
+namespace ProBridge.Utils
 {
     public static class GaussianNoise
     {
