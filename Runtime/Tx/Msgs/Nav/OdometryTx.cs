@@ -79,10 +79,13 @@ namespace ProBridge.Tx.Nav
                 data.pose.pose.position.y += GaussianNoise.Generate(positionNoiseStdDev);
                 data.pose.pose.position.z += GaussianNoise.Generate(positionNoiseStdDev);
                 
-                data.pose.pose.orientation.x += GaussianNoise.Generate(rotationNoiseStdDev);
-                data.pose.pose.orientation.y += GaussianNoise.Generate(rotationNoiseStdDev);
-                data.pose.pose.orientation.z += GaussianNoise.Generate(rotationNoiseStdDev);
-                data.pose.pose.orientation.w += GaussianNoise.Generate(rotationNoiseStdDev);
+                var euler = data.pose.pose.orientation.FromRos().eulerAngles;
+                
+                euler.x += GaussianNoise.Generate(rotationNoiseStdDev);
+                euler.y += GaussianNoise.Generate(rotationNoiseStdDev);
+                euler.z += GaussianNoise.Generate(rotationNoiseStdDev);
+                
+                data.pose.pose.orientation = Quaternion.Euler(euler).ToRos();
                 
                 data.twist.twist.linear.x += GaussianNoise.Generate(linearVelocityNoiseStdDev);
                 data.twist.twist.linear.y += GaussianNoise.Generate(linearVelocityNoiseStdDev);
