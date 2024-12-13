@@ -2,6 +2,7 @@ using System;
 using nav_msgs.msg;
 using UnityEngine;
 using ProBridge.Utils;
+using Utils;
 
 namespace ProBridge.Tx.Nav
 {
@@ -13,6 +14,14 @@ namespace ProBridge.Tx.Nav
         public Transform startPos;
         public float[] covariancePose = new float[6] { 0.001f, 0.001f, 0.001f, 0.001f, 0.001f, 0.001f };
         public float[] covarianceTwist = new float[6] { 0.001f, 0.001f, 0.001f, 0.001f, 0.001f, 0.001f };
+        
+        [Header("Noise Parameters")]
+        public bool applyNoise = false;
+        public float linearVelocityNoiseStdDev = 0.0f;
+        public float angularVelocityNoiseStdDev = 0.0f;
+        public float positionNoiseStdDev = 0.0f;
+        public float rotationNoiseStdDev = 0.0f;
+        
         private Vector3 _startPose;
         private Quaternion _startRotation;
 
@@ -64,6 +73,26 @@ namespace ProBridge.Tx.Nav
 
             data.twist.twist.linear = (Quaternion.Inverse(transform.rotation) * Velocity).ToRos();
             data.twist.twist.angular = (Quaternion.Inverse(transform.rotation) * AngularVelocity).ToRosAngular();
+
+            if (applyNoise)
+            {
+                data.pose.pose.position.x += GaussianNoise.Generate(positionNoiseStdDev);
+                data.pose.pose.position.y += GaussianNoise.Generate(positionNoiseStdDev);
+                data.pose.pose.position.z += GaussianNoise.Generate(positionNoiseStdDev);
+                
+                data.pose.pose.orientation.x += GaussianNoise.Generate(rotationNoiseStdDev);
+                data.pose.pose.orientation.y += GaussianNoise.Generate(rotationNoiseStdDev);
+                data.pose.pose.orientation.z += GaussianNoise.Generate(rotationNoiseStdDev);
+                data.pose.pose.orientation.w += GaussianNoise.Generate(rotationNoiseStdDev);
+                
+                data.twist.twist.linear.x += GaussianNoise.Generate(linearVelocityNoiseStdDev);
+                data.twist.twist.linear.y += GaussianNoise.Generate(linearVelocityNoiseStdDev);
+                data.twist.twist.linear.z += GaussianNoise.Generate(linearVelocityNoiseStdDev);
+                
+                data.twist.twist.angular.x += GaussianNoise.Generate(angularVelocityNoiseStdDev);
+                data.twist.twist.angular.y += GaussianNoise.Generate(angularVelocityNoiseStdDev);
+                data.twist.twist.angular.z += GaussianNoise.Generate(angularVelocityNoiseStdDev);
+            }
 
             data.child_frame_id = childFrameId;
             data.pose.covariance[0] = covariancePose[0];
