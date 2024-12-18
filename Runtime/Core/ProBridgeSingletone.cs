@@ -4,11 +4,14 @@ namespace ProBridge
 {
     public class ProBridgeSingletone<T> : MonoBehaviour where T : MonoBehaviour
     {
+        private static __instance;
         public static T Instance
         {
             get
             {
-                return FindObjectOfType<T>();
+                if (__instance == null)
+                   __instance = FindObjectOfType<T>();
+                return __instance;
             }
         }
 
