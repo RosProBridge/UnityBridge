@@ -4,7 +4,7 @@ namespace ProBridge
 {
     public class ProBridgeSingletone<T> : MonoBehaviour where T : MonoBehaviour
     {
-        private static __instance;
+        private static T __instance;
         public static T Instance
         {
             get
