@@ -389,5 +389,66 @@ namespace sensor_msgs
             /// </summary>
             public float range;
         }
+
+        public class LaserScan : IRosMsg, IStamped
+        {
+            string IRosMsg.GetRosType()
+            {
+                return "sensor_msgs.msg.LaserScan";
+            }
+
+            public Header header { get; set; } = new Header();
+
+            /// <summary>
+            /// start angle of the scan[rad]
+            /// </summary>
+            public float angle_min;
+
+            /// <summary>
+            /// end angle of the scan [rad]
+            /// </summary>
+            public float angle_max;
+
+            /// <summary>
+            /// angular distance between measurements [rad]
+            /// </summary>
+            public float angle_increment;
+
+            /// <summary>
+            /// time between measurements [seconds] - if your scanner
+            /// is moving, this will be used in interpolating position
+            /// of 3d points
+            /// </summary>
+            public float time_increment;
+
+            /// <summary>
+            /// time between scans [seconds]
+            /// </summary>
+            public float scan_time;
+
+            /// <summary>
+            /// minimum range value [m]
+            /// </summary>
+            public float range_min;
+
+            /// <summary>
+            /// maximum range value [m]
+            /// </summary>
+            public float range_max;
+
+            /// <summary>
+            /// range data [m]
+            /// (Note: values < range_min or > range_max should be discarded)
+            /// </summary>
+            public float[] ranges;
+
+            /// <summary>
+            /// intensity data [device-specific units]. If your
+            /// device does not provide intensities, please leave
+            /// the array empty.
+            /// </summary>
+            public float[] intensities;
+        }
+
     }
 }
