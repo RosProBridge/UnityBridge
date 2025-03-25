@@ -8,7 +8,6 @@ namespace ProBridge.Tx
     {
         #region Inspector
         public ProBridgeHost host;
-        public bool manualSend;
         public float sendRate = 0.025f;
         public string topic = "";
         [Range(0, 2)]
@@ -31,11 +30,10 @@ namespace ProBridge.Tx
 
         private long _lastSimTime = 0;
 
-        private bool initialized;
 
         private bool sentHostMissingMsg;
 
-        private void Start()
+        private void OnEnable()
         {
             if (Bridge == null)
             {
@@ -44,42 +42,28 @@ namespace ProBridge.Tx
                 return;
             }
 
-            OnStart();
-            initialized = true;
-            
-            if(sendRate>0f && !manualSend) InvokeRepeating(nameof(SendMsg), 0, sendRate);
-            
-            
-        }
-
-        private void OnEnable()
-        {
-            if(sendRate>0f && !manualSend && initialized) InvokeRepeating(nameof(SendMsg), 0, sendRate);
-
+            AfterEnable();
+            if (sendRate > 0f)
+                InvokeRepeating(nameof(SendMsg), 0, sendRate);
         }
 
         private void OnDisable()
         {
-            CancelInvoke("SendMsg");
-        }
-
-        private void OnDestroy()
-        {
-            CancelInvoke("SendMsg");
-            OnStop();
+            CancelInvoke(nameof(SendMsg));
+            AfterDisable();
         }
 
         protected void SendMsg()
         {
             if (!host)
             {
-                if(!sentHostMissingMsg) Debug.LogWarning($"No host assigned for topic {topic}.");
+                if (!sentHostMissingMsg) Debug.LogWarning($"No host assigned for topic {topic}.");
                 sentHostMissingMsg = true;
                 return;
             }
 
             sentHostMissingMsg = false;
-            
+
             var st = ProBridgeServer.SimTime.Ticks;
             if (_lastSimTime >= st)
             {
@@ -123,7 +107,7 @@ namespace ProBridge.Tx
             };
         }
 
-        protected virtual void OnStart() { }
-        protected virtual void OnStop() { }
+        protected virtual void AfterEnable() { }
+        protected virtual void AfterDisable() { }
     }
 }

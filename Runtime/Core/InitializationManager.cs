@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace ProBridge
 {
-    
+
     [DefaultExecutionOrder(-10000)]
     public class InitializationManager : ProBridgeSingletone<InitializationManager>
     {
@@ -17,8 +17,8 @@ namespace ProBridge
 
         private void Awake()
         {
-            _server = FindObjectOfType<ProBridgeServer>();
             _hosts = FindObjectsOfType<ProBridgeHost>();
+            _server = FindObjectOfType<ProBridgeServer>();
             _tfSender = FindObjectOfType<TfSender>();
 
             try
@@ -31,8 +31,7 @@ namespace ProBridge
                     host.pushSocket.Connect($"tcp://{host.addr}:{host.port}");
                     host.pushSocket.Options.Linger = new TimeSpan(0, 0, 1);
                 }
-                
-                
+
                 // Init server
                 try
                 {
@@ -43,21 +42,13 @@ namespace ProBridge
                 catch (Exception ex)
                 {
                     _server.Bridge = null;
-                    Debug.Log(ex);
+                    Debug.LogError(ex);
+                    return;
                 }
-                
-                
-                // Init tf sender
-                if(_tfSender != null)
-                {
-                    _tfSender.Bridge = _server.Bridge;
-                    if (_tfSender.Bridge == null)
-                    {
-                        enabled = false;
-                        Debug.LogWarning("ROS bridge server not initialized.");
-                        return;
-                    }
 
+                // Init tf sender
+                if (_tfSender != null)
+                {
                     _tfSender.host.onSubscriberConnect += _tfSender.SendStaticMsg;
                     _tfSender.CallRepeatingMethods();
                 }
@@ -65,7 +56,7 @@ namespace ProBridge
                 {
                     Debug.LogWarning("No TFSender found in scene.");
                 }
-                
+
                 // Init host monitors
                 foreach (var host in _hosts)
                 {
@@ -86,10 +77,10 @@ namespace ProBridge
             {
                 host?.Dispose();
             }
-            
+
             // De-init server
             _server?.Dispose();
-            
+
             // NetMQ cleanup
             NetMQConfig.Cleanup(false);
         }
