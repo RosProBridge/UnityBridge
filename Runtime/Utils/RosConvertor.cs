@@ -39,6 +39,11 @@ namespace ProBridge.Utils
             return new geometry_msgs.msg.Vector3() { x = -v.z, y = v.x, z = -v.y };
         }
 
+        public static Vector3 FromRosAngular(this geometry_msgs.msg.Vector3 v)
+        {
+            return new Vector3((float)v.y, (float)-v.z, (float)-v.x);
+        }
+
         public static Quaternion FromRos(this geometry_msgs.msg.Quaternion q)
         {
             return new Quaternion((float)q.y, (float)-q.z, (float)-q.x, (float)q.w);
