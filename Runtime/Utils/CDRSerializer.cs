@@ -251,7 +251,7 @@ namespace ProBridge.Utils
             {
                 using (BinaryReader reader = new BinaryReader(ms))
                 {
-                    reader.BaseStream.Seek(4, SeekOrigin.Begin); // Skip the first 4 header bytes
+                    if(ROS2Serialization) reader.BaseStream.Seek(4, SeekOrigin.Begin); // Skip the first 4 header bytes
                     return (T)DeserializeObject(reader, typeof(T));
                 }
             }
