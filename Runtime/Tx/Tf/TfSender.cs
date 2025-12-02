@@ -173,6 +173,8 @@ namespace ProBridge.Tx.Tf
                     c = compressionLevel,
 #if ROS_V2
                     q = staticT ? __staticQos : __dynamicQos,
+#else
+                    l = staticT,
 #endif
                     d = data
                 };

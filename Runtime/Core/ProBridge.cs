@@ -32,9 +32,14 @@ namespace ProBridge
 
 #if ROS_V2
             /// <summary>
-            /// Quality od service, like as "qos_profile_system_default" or "qos_profile_sensor_data"
+            /// Quality of service, like as "qos_profile_system_default" or "qos_profile_sensor_data"
             /// </summary>
             public Qos q;
+#else
+            /// <summary>
+            /// Latching flag for the message. If true, the message is a latched version of the previous message.
+            /// </summary>
+            public bool l = false;
 #endif
             /// <summary>
             /// Data Compression Level (0-9)
@@ -100,6 +105,8 @@ namespace ProBridge
                 { "n", msg.n },
 #if ROS_V2
                 { "q", msg.q.GetValue() },
+#else
+                { "l", msg.l },
 #endif
                 { "c", msg.c }
             };
@@ -206,6 +213,8 @@ namespace ProBridge
                     msg.n = (string)messageData["n"];
 #if ROS_V2
                     msg.q = new Qos(messageData["q"]);
+#else
+                    msg.l = (bool)messageData["l"];
 #endif
                     msg.c = (int)tmpC;
                     
