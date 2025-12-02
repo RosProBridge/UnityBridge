@@ -105,6 +105,8 @@ namespace ProBridge
                 { "n", msg.n },
 #if ROS_V2
                 { "q", msg.q.GetValue() },
+#else
+                { "l", msg.l },
 #endif
                 { "c", msg.c }
             };
@@ -211,6 +213,8 @@ namespace ProBridge
                     msg.n = (string)messageData["n"];
 #if ROS_V2
                     msg.q = new Qos(messageData["q"]);
+#else
+                    msg.l = (bool)messageData["l"];
 #endif
                     msg.c = (int)tmpC;
                     
