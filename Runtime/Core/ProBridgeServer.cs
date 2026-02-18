@@ -24,7 +24,7 @@ namespace ProBridge
 
         public MsgEvent MessageEvent { get; } = new MsgEvent();
 
-        public static TimeSpan SimTime { get; private set; }
+        public static TimeSpan SimTime { get; private set; } = new TimeSpan(DateTime.UtcNow.Ticks);
 
         public ProBridge Bridge;
 
@@ -41,13 +41,18 @@ namespace ProBridge
             }
         }
 
-        private bool firstFrame;
+        private bool _isFirstFrame = true;
+
+        private void OnEnable()
+        {
+            _isFirstFrame = true;
+        }
 
         private void FixedUpdate()
         {
-            if (!firstFrame)
+            if (_isFirstFrame)
             {
-                firstFrame = true;
+                _isFirstFrame = false;
                 _initTime = DateTime.UtcNow.Ticks;
             }
 

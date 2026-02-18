@@ -38,7 +38,7 @@ namespace ProBridge.Tx.Tf
 
         private bool _needUpdateStaticMsgs = false;
 
-        public void CallRepeatingMethods()
+        public void OnEnable()
         {
             InvokeRepeating("UpdateStaticMsgs", 1, 1);
             InvokeRepeating("SendDynamicMsg", 1, sendRate);
@@ -46,6 +46,7 @@ namespace ProBridge.Tx.Tf
 
         private void OnDisable()
         {
+            CancelInvoke("UpdateStaticMsgs");
             CancelInvoke("SendDynamicMsg");
         }
 

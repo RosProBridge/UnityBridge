@@ -51,7 +51,6 @@ namespace ProBridge
                 {
                     _tfSender.Bridge = _server.Bridge;
                     _tfSender.host.onSubscriberConnect += _tfSender.SendStaticMsg;
-                    _tfSender.CallRepeatingMethods();
                 }
                 else
                 {
