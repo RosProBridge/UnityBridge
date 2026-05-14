@@ -17,7 +17,7 @@ namespace ProBridge
 
         private void Awake()
         {
-            _hosts = FindObjectsOfType<ProBridgeHost>();
+            _hosts = FindObjectsOfType<ProBridgeHost>(true);
             _server = FindObjectOfType<ProBridgeServer>();
             _tfSender = FindObjectOfType<TfSender>();
 
