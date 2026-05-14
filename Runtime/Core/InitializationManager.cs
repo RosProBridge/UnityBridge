@@ -17,7 +17,7 @@ namespace ProBridge
 
         private void Awake()
         {
-            _hosts = FindObjectsOfType<ProBridgeHost>();
+            _hosts = FindObjectsOfType<ProBridgeHost>(true);
             _server = FindObjectOfType<ProBridgeServer>();
             _tfSender = FindObjectOfType<TfSender>();
 
@@ -51,6 +51,7 @@ namespace ProBridge
                 {
                     _tfSender.Bridge = _server.Bridge;
                     _tfSender.host.onSubscriberConnect += _tfSender.SendStaticMsg;
+                    _tfSender.CallRepeatingMethods();
                 }
                 else
                 {
