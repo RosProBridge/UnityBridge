@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using ProBridge.Utils;
 using UnityEngine;
 
@@ -12,24 +13,30 @@ namespace ProBridge.Rx
 
         private T __msg = new();
 
-        private void GetMsg(ProBridge.Msg msg)
+        private async void GetMsg(ProBridge.Msg msg)
         {
             if (!isActiveAndEnabled || topic == "")
                 return;
 
             if (msg.t != __msg.GetRosType())
                 return;
-            
+
             if (msg.n != topic)
                 return;
 
+            var data = (byte[])msg.d;
             try
             {
-                OnMessage(CDRSerializer.Deserialize<T>((byte[])msg.d));
+                var deserialized = await Task.Run(() => CDRSerializer.Deserialize<T>(data));
+
+                if (this == null || !isActiveAndEnabled)
+                    return;
+
+                OnMessage(deserialized);
             }
-            catch(Exception e)
+            catch (Exception ex)
             {
-                Debug.LogError($"Failed to deserialize message for {msg.n} of type {msg.t} : {e}");
+                Debug.LogError($"Failed to deserialize message for {msg.n} of type {msg.t}: {ex}");
             }
         }
 
