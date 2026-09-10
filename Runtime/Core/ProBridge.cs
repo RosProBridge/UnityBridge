@@ -72,7 +72,10 @@ namespace ProBridge
         private bool _active = true;
         private Thread _th = null;
         private PullSocket _pullSocket;
+        private ProBridgeConnectionMonitor _connectionMonitor;
 
+
+        public bool IsConnected => _connectionMonitor != null && _connectionMonitor.IsConnected;
 
         public ProBridge(int port = 47777, string ip = "127.0.0.1")
         {
@@ -82,11 +85,29 @@ namespace ProBridge
 
             _pullSocket = new PullSocket();
             _pullSocket.Bind($"tcp://{_ip}:{_port}");
+            SetupMonitor();
+        }
+
+        public void SetupMonitor()
+        {
+            if (_pullSocket == null || _connectionMonitor != null)
+                return;
+
+            _connectionMonitor = new ProBridgeConnectionMonitor(
+                _pullSocket,
+                $"inproc://monitor-server-{_ip}:{_port}",
+                ProBridgeConnectionMonitor.Mode.Bind);
+        }
+
+        public void PumpConnectionEvents(Action<bool> onStatusChanged)
+        {
+            _connectionMonitor?.Pump(onStatusChanged);
         }
 
         public void Dispose()
         {
             _active = false;
+            _connectionMonitor?.Dispose();
             _pullSocket.Close();
             if (_th != null)
             {

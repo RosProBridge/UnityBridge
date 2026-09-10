@@ -14,6 +14,11 @@ namespace ProBridge
         {
         }
 
+        [Serializable]
+        public class StatusEvent : UnityEvent<bool>
+        {
+        }
+
         #region Inspector
 
         public string ip = "127.0.0.1";
@@ -23,6 +28,20 @@ namespace ProBridge
         #endregion
 
         public MsgEvent MessageEvent { get; } = new MsgEvent();
+
+        /// <summary>
+        /// Raised on the Unity main thread when a remote PUSH client connects to or disconnects from this PULL server.
+        /// Check <see cref="IsConnected"/> for the current snapshot after subscribing.
+        /// </summary>
+        public event Action<bool> ConnectionStatusChanged;
+
+        /// <summary>
+        /// Same as <see cref="ConnectionStatusChanged"/>, for <c>AddListener</c> style subscriptions.
+        /// Does not replay the current status; read <see cref="IsConnected"/> after subscribing if needed.
+        /// </summary>
+        public StatusEvent ConnectionStatusEvent { get; } = new StatusEvent();
+
+        public bool IsConnected => Bridge != null && Bridge.IsConnected;
 
         public static TimeSpan SimTime { get; private set; } = new TimeSpan(DateTime.UtcNow.Ticks);
 
@@ -38,6 +57,7 @@ namespace ProBridge
                 Bridge.onMessageHandler -= OnMsg;
                 Bridge.onDebugHandler -= OnLogMessage;
                 Bridge.Dispose();
+                Bridge.PumpConnectionEvents(OnConnectionStatusChanged);
             }
         }
 
@@ -46,6 +66,17 @@ namespace ProBridge
         private void OnEnable()
         {
             _isFirstFrame = true;
+        }
+
+        private void Update()
+        {
+            Bridge?.PumpConnectionEvents(OnConnectionStatusChanged);
+        }
+
+        private void OnConnectionStatusChanged(bool connected)
+        {
+            ConnectionStatusChanged?.Invoke(connected);
+            ConnectionStatusEvent.Invoke(connected);
         }
 
         private void FixedUpdate()
