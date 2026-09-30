@@ -5,8 +5,18 @@ using UnityEngine.Events;
 
 namespace ProBridge
 {
+    /// <summary>
+    /// Called by <see cref="ProBridgeServer"/> once per simulation step, right after <see cref="ProBridgeServer.SimTime"/> is updated.
+    /// </summary>
+    internal interface ISimStepListener
+    {
+        void OnSimStep();
+    }
+
     [AddComponentMenu("ProBridge/Server")]
     [RequireComponent(typeof(InitializationManager))]
+    // Runs before other FixedUpdate methods, so SimTime is already advanced when components read it.
+    [DefaultExecutionOrder(-9000)]
     public class ProBridgeServer : ProBridgeSingletone<ProBridgeServer>, IDisposable
     {
         [Serializable]
@@ -50,6 +60,19 @@ namespace ProBridge
         private Queue<ProBridge.Msg> _queue = new Queue<ProBridge.Msg>();
         [HideInInspector] public long _initTime;
 
+        private static readonly List<ISimStepListener> _simStepListeners = new List<ISimStepListener>();
+
+        internal static void AddSimStepListener(ISimStepListener listener)
+        {
+            if (!_simStepListeners.Contains(listener))
+                _simStepListeners.Add(listener);
+        }
+
+        internal static void RemoveSimStepListener(ISimStepListener listener)
+        {
+            _simStepListeners.Remove(listener);
+        }
+
         public void Dispose()
         {
             if (Bridge != null)
@@ -87,12 +110,19 @@ namespace ProBridge
                 _initTime = DateTime.UtcNow.Ticks;
             }
 
-            SimTime = new TimeSpan(_initTime + (long)(Time.fixedTime * TimeSpan.TicksPerSecond));
+            SimTime = new TimeSpan(_initTime + (long)(Time.fixedTimeAsDouble * TimeSpan.TicksPerSecond));
 
-            Bridge.TryReceive();
+            Bridge?.TryReceive();
 
             while (_queue.Count > 0)
                 MessageEvent.Invoke(_queue.Dequeue());
+
+            // Iterate backwards: a listener may disable itself (and unsubscribe) while sending.
+            for (int i = _simStepListeners.Count - 1; i >= 0; i--)
+            {
+                if (i < _simStepListeners.Count)
+                    _simStepListeners[i].OnSimStep();
+            }
         }
 
         public void OnMsg(ProBridge.Msg msg)

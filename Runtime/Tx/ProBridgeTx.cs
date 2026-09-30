@@ -4,10 +4,15 @@ using UnityEngine;
 
 namespace ProBridge.Tx
 {
-    public abstract class ProBridgeTx<T> : MonoBehaviour where T : std_msgs.IRosMsg, new()
+    public abstract class ProBridgeTx<T> : MonoBehaviour, ISimStepListener where T : std_msgs.IRosMsg, new()
     {
+        private const float SkippedReportInterval = 5f;
+
         #region Inspector
         public ProBridgeHost host;
+        [Tooltip("Send period in simulation seconds. 0 sends every simulation (physics) step. " +
+                 "Messages are never sent more often than once per step.")]
+        [Min(0f)]
         public float sendRate = 0.025f;
         public string topic = "";
         [Range(0, 2)]
@@ -29,7 +34,9 @@ namespace ProBridge.Tx
         private ProBridge Bridge { get { return ProBridgeServer.Instance?.Bridge; } }
 
         private long _lastSimTime = 0;
-
+        private double _nextSendTime;
+        private int _skippedCount;
+        private float _nextSkippedReport;
 
         private bool sentHostMissingMsg;
 
@@ -43,14 +50,36 @@ namespace ProBridge.Tx
             }
 
             AfterEnable();
-            if (sendRate > 0f)
-                InvokeRepeating(nameof(SendMsg), 0, sendRate);
+
+            if (sendRate > 0f && sendRate < Time.fixedDeltaTime)
+                Debug.LogWarning($"[{topic}] sendRate {sendRate}s is shorter than the physics step {Time.fixedDeltaTime}s: " +
+                                 $"messages are sent once per step ({1f / Time.fixedDeltaTime:0} Hz). Set sendRate to 0 to send every step.", this);
+
+            _nextSendTime = Time.fixedTimeAsDouble;
+            ProBridgeServer.AddSimStepListener(this);
         }
 
         private void OnDisable()
         {
-            CancelInvoke(nameof(SendMsg));
+            ProBridgeServer.RemoveSimStepListener(this);
             AfterDisable();
+        }
+
+        void ISimStepListener.OnSimStep()
+        {
+            if (sendRate > 0f)
+            {
+                double now = Time.fixedTimeAsDouble;
+                if (now + 1e-6 < _nextSendTime)
+                    return;
+
+                // Keep the average rate, but never queue up several sends when falling behind.
+                _nextSendTime += sendRate;
+                if (_nextSendTime <= now)
+                    _nextSendTime = now + sendRate;
+            }
+
+            SendMsg();
         }
 
         protected void SendMsg()
@@ -64,10 +93,12 @@ namespace ProBridge.Tx
 
             sentHostMissingMsg = false;
 
+            // A message is stamped with SimTime, so two sends within one simulation step would carry the same stamp.
+            // Scheduled sends happen once per step; this only triggers for extra manual SendMsg() calls.
             var st = ProBridgeServer.SimTime.Ticks;
             if (_lastSimTime >= st)
             {
-                Debug.LogWarning("Can't send message before update SimTime.");
+                ReportSkipped();
                 return;
             }
             _lastSimTime = st;
@@ -105,6 +136,18 @@ namespace ProBridge.Tx
 #endif
                 d = data
             };
+        }
+
+        private void ReportSkipped()
+        {
+            _skippedCount++;
+            if (Time.realtimeSinceStartup < _nextSkippedReport)
+                return;
+
+            Debug.LogWarning($"[{topic}] Skipped {_skippedCount} message(s): SendMsg() was called again before SimTime " +
+                             $"advanced (physics step {Time.fixedDeltaTime}s). Check extra SendMsg() calls.", this);
+            _skippedCount = 0;
+            _nextSkippedReport = Time.realtimeSinceStartup + SkippedReportInterval;
         }
 
         protected virtual void AfterEnable() { }

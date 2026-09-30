@@ -23,13 +23,19 @@ namespace ProBridge
 
             try
             {
-                // Init hosts sockets
+                // Subscribe before connecting: the first peer connection may be reported right away
+                if (_tfSender != null)
+                    _tfSender.host.onSubscriberConnect += _tfSender.SendStaticMsg;
+
+                // Init hosts sockets. The monitor must be attached before Connect, otherwise a fast
+                // connection (e.g. ROS already running when the scene is reloaded) is never reported.
                 AsyncIO.ForceDotNet.Force();
                 foreach (var host in _hosts)
                 {
                     host.pushSocket = new PushSocket();
-                    host.pushSocket.Connect($"tcp://{host.addr}:{host.port}");
                     host.pushSocket.Options.Linger = new TimeSpan(0, 0, 1);
+                    host.SetupMonitor();
+                    host.pushSocket.Connect($"tcp://{host.addr}:{host.port}");
                 }
 
                 // Init server
@@ -50,18 +56,11 @@ namespace ProBridge
                 if (_tfSender != null)
                 {
                     _tfSender.Bridge = _server.Bridge;
-                    _tfSender.host.onSubscriberConnect += _tfSender.SendStaticMsg;
                     _tfSender.CallRepeatingMethods();
                 }
                 else
                 {
                     Debug.LogWarning("No TFSender found in scene.");
-                }
-
-                // Init host monitors
-                foreach (var host in _hosts)
-                {
-                    host.SetupMonitor();
                 }
             }
             catch (Exception e)

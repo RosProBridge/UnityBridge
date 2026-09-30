@@ -48,7 +48,8 @@ namespace ProBridge
 
             _connectionMonitor = new ProBridgeConnectionMonitor(
                 pushSocket,
-                $"inproc://monitor-{addr}:{port}",
+                // Unique per instance: the previous scene's monitor may still hold its endpoint.
+                $"inproc://monitor-{addr}:{port}-{Guid.NewGuid():N}",
                 ProBridgeConnectionMonitor.Mode.Connect);
 
             _connectionMonitor.PeerConnected += (s, e) => onSubscriberConnect?.Invoke(this, e);

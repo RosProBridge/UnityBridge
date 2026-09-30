@@ -83,9 +83,10 @@ namespace ProBridge
             _port = port;
 
 
+            // Attach the monitor before Bind, otherwise peers reconnecting immediately are never reported.
             _pullSocket = new PullSocket();
-            _pullSocket.Bind($"tcp://{_ip}:{_port}");
             SetupMonitor();
+            _pullSocket.Bind($"tcp://{_ip}:{_port}");
         }
 
         public void SetupMonitor()
@@ -95,7 +96,8 @@ namespace ProBridge
 
             _connectionMonitor = new ProBridgeConnectionMonitor(
                 _pullSocket,
-                $"inproc://monitor-server-{_ip}:{_port}",
+                // Unique per instance: the previous scene's monitor may still hold its endpoint.
+                $"inproc://monitor-server-{_ip}:{_port}-{Guid.NewGuid():N}",
                 ProBridgeConnectionMonitor.Mode.Bind);
         }
 

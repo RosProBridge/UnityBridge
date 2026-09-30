@@ -9,7 +9,7 @@ namespace ProBridge.Tx
     {
         protected override void AfterEnable()
         {
-            sendRate = Time.fixedDeltaTime;
+            sendRate = 0f; // every simulation step
         }
 
         protected override ProBridge.Msg GetMsg(TimeSpan ts)
