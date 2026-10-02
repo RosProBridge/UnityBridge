@@ -14,6 +14,10 @@ namespace ProBridge.Tx
                  "Messages are never sent more often than once per step.")]
         [Min(0f)]
         public float sendRate = 0.025f;
+
+        [Tooltip("Send only when SendMsg() is called. Send Rate is ignored.")]
+        public bool manualSend = false;
+
         public string topic = "";
         [Range(0, 2)]
         public int compressionLevel = 0;
@@ -65,14 +69,16 @@ namespace ProBridge.Tx
                 return;
             }
 
+            if (!manualSend)
+            {
+                if (sendRate > 0f && sendRate < Time.fixedDeltaTime)
+                    Debug.LogWarning($"[{topic}] sendRate {sendRate}s is shorter than the physics step {Time.fixedDeltaTime}s: " +
+                                    $"messages are sent once per step ({1f / Time.fixedDeltaTime:0} Hz). Set sendRate to 0 to send every step.", this);
+
+                _nextSendTime = Time.fixedTimeAsDouble;
+                ProBridgeServer.AddSimStepListener(this);
+            }
             AfterEnable();
-
-            if (sendRate > 0f && sendRate < Time.fixedDeltaTime)
-                Debug.LogWarning($"[{topic}] sendRate {sendRate}s is shorter than the physics step {Time.fixedDeltaTime}s: " +
-                                 $"messages are sent once per step ({1f / Time.fixedDeltaTime:0} Hz). Set sendRate to 0 to send every step.", this);
-
-            _nextSendTime = Time.fixedTimeAsDouble;
-            ProBridgeServer.AddSimStepListener(this);
         }
 
         private void OnDisable()
