@@ -10,6 +10,7 @@
     - [Adding Publishers and Subscribers](#adding-publishers-and-subscribers)
       - [Subscribers (Rx)](#subscribers-rx)
       - [Publishers (Tx)](#publishers-tx)
+      - [Services (Srv)](#services-srv)
   - [Creating Custom Publishers](#creating-custom-publishers)
     - [Understanding the Base Class Structure](#understanding-the-base-class-structure)
     - [Defining the Custom Publisher Class](#defining-the-custom-publisher-class)
@@ -87,6 +88,51 @@ For publishers, there are several parameters you need to adjust:
 > **Note:** Dynamic TF (`TfSender`) is also skipped while its host is disconnected. Static TF is sent on every new connection.
 
 You can find the subscribers by checking the `Runtime/Tx/Msgs` directory or if you want to create your own subscriber see [Creating Custom Publishers](#creating-custom-publishers)
+
+#### Services (Srv)
+
+ROS services in both directions (ROS2 bridge only for now).
+
+**Served by Unity, called from ROS** — `ProBridgeService<TRequest, TResponse>`:
+
+- **Host**: The `ProBridgeHost` connected to the ROS bridge. The service is advertised through it on enable and on every connection, so the bridge creates the service in ROS by itself (nothing to add to the bridge config) and recreates it after a restart. The advertisement carries the `ProBridgeServer` port; the bridge connects to it at this machine's IP to send the calls, so `ProBridgeServer` must listen on an address reachable from the bridge.
+- **Service**: The service name, e.g. `/sim/reload`.
+
+Built-in services:
+
+- **Scene Reload** (`ProBridge/Srv/std_srvs/Scene Reload`, `std_srvs/srv/Trigger`, e.g. `/sim/reload`): reloads the active scene. The response is sent first, the scene is reloaded on the next frame. Simulation time is not reset (it is based on `Time.fixedTimeAsDouble`), so ROS nodes with `use_sim_time` see no time jump.
+- **Sim Pause** (`ProBridge/Srv/std_srvs/Sim Pause`, `std_srvs/srv/SetBool`, e.g. `/sim/pause`): `data: true` pauses the simulation, `false` resumes it.
+  - Pause sets `Time.timeScale = 0` (physics, animations, simulation time / `/clock` and publishers stop) and pauses audio; resume restores the previous time scale.
+  - In the editor the Pause button is pressed as well, and stays in sync: releasing it by hand resumes the simulation, and a pause by the button is reported as paused by the service.
+  - Incoming messages and service calls are still handled while paused (also under the editor pause), so `data: false` always gets through.
+  - The pause survives a scene reload (`Time.timeScale` is global).
+
+Custom service: derive from `ProBridgeService<TRequest, TResponse>` and implement `OnRequest`, which runs on the main thread and returns the response:
+
+```csharp
+public class EnableSensorsService : ProBridgeService<SetBool_Request, SetBool_Response>
+{
+    public GameObject sensorsRoot;
+
+    protected override SetBool_Response OnRequest(SetBool_Request request)
+    {
+        sensorsRoot.SetActive(request.data);
+        return new SetBool_Response { success = true, message = request.data ? "enabled" : "disabled" };
+    }
+}
+```
+
+**Served in ROS, called from Unity** — `ProBridgeServiceClient<TRequest, TResponse>`: list the service in `services` of the ROS bridge config. The response comes back to the `ProBridgeServer` of the caller (its port is sent with the request). Fields: **Host**, **Service**, **Timeout**.
+
+```csharp
+public class SaveMapClient : ProBridgeServiceClient<Trigger_Request, Trigger_Response> { }
+
+saveMapClient.Call(new Trigger_Request(),
+    response => Debug.Log($"{response.success}: {response.message}"),
+    error => Debug.LogWarning(error));   // not connected or timeout
+```
+
+Request and response classes follow the rosidl names `<Service>_Request` / `<Service>_Response` (see `RosMsgs/StdSrvs/std_srvs.cs` for `Trigger`, `SetBool`, `Empty`); the service type is the request type without the `_Request` suffix. In ROS2 an empty request or response has a single `byte structure_needs_at_least_one_member` field.
 
 ## Creating Custom Publishers
 

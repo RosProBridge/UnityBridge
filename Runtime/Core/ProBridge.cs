@@ -17,6 +17,15 @@ namespace ProBridge
 
         public class Msg
         {
+            /// <summary>Value of <see cref="k"/>: the sender serves service <see cref="n"/> of type <see cref="t"/>.</summary>
+            public const string KindAdvertise = "adv";
+
+            /// <summary>Value of <see cref="k"/> for a service request.</summary>
+            public const string KindRequest = "req";
+
+            /// <summary>Value of <see cref="k"/> for a service response.</summary>
+            public const string KindResponse = "res";
+
             public byte v;
 
             /// <summary>
@@ -50,6 +59,23 @@ namespace ProBridge
             /// Value of object
             /// </summary>
             public object d;
+
+            /// <summary>
+            /// Message kind: null for a topic message, <see cref="KindAdvertise"/>, <see cref="KindRequest"/> or <see cref="KindResponse"/> for a service.
+            /// For a service call <see cref="n"/> is the service name and <see cref="t"/> the service type.
+            /// </summary>
+            public string k;
+
+            /// <summary>
+            /// Service call id: a response carries the id of its request.
+            /// </summary>
+            public long id;
+
+            /// <summary>
+            /// Advertisement or request: port of the sender's <see cref="ProBridgeServer"/>. The receiver connects
+            /// to it (at the sender's IP) to send service requests / responses back, no config needed.
+            /// </summary>
+            public int replyPort;
         }
 
 
@@ -133,6 +159,13 @@ namespace ProBridge
 #endif
                 { "c", msg.c }
             };
+            if (msg.k != null)
+            {
+                messageData["k"] = msg.k;
+                messageData["id"] = msg.id;
+                if (msg.replyPort > 0)
+                    messageData["p"] = msg.replyPort;
+            }
 
             var json = JsonConvert.SerializeObject(messageData);
             var header = CompressData(json);
@@ -240,6 +273,11 @@ namespace ProBridge
                     msg.l = (bool)messageData["l"];
 #endif
                     msg.c = (int)tmpC;
+
+                    if (messageData.TryGetValue("k", out var kind))
+                        msg.k = (string)kind;
+                    if (messageData.TryGetValue("id", out var id))
+                        msg.id = (long)id;
                     
                     return msg;
                 }

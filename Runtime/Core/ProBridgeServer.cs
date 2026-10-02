@@ -89,11 +89,35 @@ namespace ProBridge
         private void OnEnable()
         {
             _isFirstFrame = true;
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.update += OnEditorUpdate;
+#endif
         }
+
+        private void OnDisable()
+        {
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.update -= OnEditorUpdate;
+#endif
+        }
+
+#if UNITY_EDITOR
+        // The editor pause button stops the player loop: keep handling incoming messages, e.g. the request to resume.
+        private void OnEditorUpdate()
+        {
+            if (Application.isPlaying && UnityEditor.EditorApplication.isPaused)
+                ProcessIncoming();
+        }
+#endif
 
         private void Update()
         {
             Bridge?.PumpConnectionEvents(OnConnectionStatusChanged);
+
+            // FixedUpdate doesn't run while the simulation is paused (timeScale = 0):
+            // keep handling incoming messages, e.g. the request to resume.
+            if (Time.timeScale == 0f)
+                ProcessIncoming();
         }
 
         private void OnConnectionStatusChanged(bool connected)
@@ -112,10 +136,7 @@ namespace ProBridge
 
             SimTime = new TimeSpan(_initTime + (long)(Time.fixedTimeAsDouble * TimeSpan.TicksPerSecond));
 
-            Bridge?.TryReceive();
-
-            while (_queue.Count > 0)
-                MessageEvent.Invoke(_queue.Dequeue());
+            ProcessIncoming();
 
             // Iterate backwards: a listener may disable itself (and unsubscribe) while sending.
             for (int i = _simStepListeners.Count - 1; i >= 0; i--)
@@ -123,6 +144,14 @@ namespace ProBridge
                 if (i < _simStepListeners.Count)
                     _simStepListeners[i].OnSimStep();
             }
+        }
+
+        private void ProcessIncoming()
+        {
+            Bridge?.TryReceive();
+
+            while (_queue.Count > 0)
+                MessageEvent.Invoke(_queue.Dequeue());
         }
 
         public void OnMsg(ProBridge.Msg msg)

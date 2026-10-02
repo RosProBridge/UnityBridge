@@ -18,6 +18,9 @@ namespace ProBridge.Rx
             if (!isActiveAndEnabled || topic == "")
                 return;
 
+            if (msg.k != null) // service call
+                return;
+
             if (msg.t != __msg.GetRosType())
                 return;
 
