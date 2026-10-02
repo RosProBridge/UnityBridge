@@ -22,6 +22,11 @@ namespace sensor_msgs
             public const byte UINT32 = 6;
             public const byte FLOAT32 = 7;
             public const byte FLOAT64 = 8;
+#if ROS_V2_LYRICAL
+            public const byte INT64 = 9;
+            public const byte UINT64 = 10;
+            public const byte BOOL = 11;
+#endif
 
             public string name; // Name of the field
             public uint offset; // Offset from the start of the point struct
@@ -77,6 +82,10 @@ namespace sensor_msgs
             }
 
             // Constants for Status
+
+#if ROS_V2_JAZZY || ROS_V2_KILTED || ROS_V2_LYRICAL
+            public const sbyte STATUS_UNKNOWN = -2;
+#endif
             public const sbyte STATUS_NO_FIX = -1;
             public const sbyte STATUS_FIX = 0;
             public const sbyte STATUS_SBAS_FIX = 1;
@@ -388,6 +397,14 @@ namespace sensor_msgs
             /// +Inf represents no detection within the fixed distance. (Object out of range)<br/>
             /// </summary>
             public float range;
+
+#if ROS_V2_IRON || ROS_V2_JAZZY || ROS_V2_KILTED || ROS_V2_LYRICAL
+            /// <summary>
+            /// variance of the range sensor [m]
+            /// 0 is interpreted as variance unknown
+            /// </summary>
+            public float variance;
+#endif
         }
 
         public class LaserScan : IRosMsg, IStamped
