@@ -80,6 +80,8 @@ For publishers, there are several parameters you need to adjust:
 
 - **Host**: A reference to the `ProBridgeHost` you want to use for publishing. This links your publisher to a specific host configuration.
 - **Send Rate**: The interval between consecutive messages, in simulation seconds. Messages are sent at most once per physics step; `0` sends every physics step.
+
+  Only building the message and its CDR serialization (into a pooled buffer) run on the main thread; the header, compression and the socket send run on a sender thread of the `ProBridgeHost` (in order; the oldest message is dropped if more than 64 are waiting).
 - **Topic**: The name of the ROS topic that the publisher will send messages to.
 - **Compression Level**: The level of compression to apply to the ROS messages.
 - **Use Without Link**: Off by default. While the host has no connection to the ROS side, the publisher does nothing: `GetMsg` is not called, so sensors spend no CPU. Turn it on when other scripts read the publisher's `data` or subscribe to `OnSendMessage` at runtime without ROS; messages are then built, but still not serialized or sent until the link is up.
@@ -409,6 +411,11 @@ public class CustomStampedMsg : IRosMsg, IStamped
 ```
 
 
+
+#### Optional: Helper Fields and Reused Buffers
+
+- Fields marked `[System.NonSerialized]` are not part of the message (not serialized or deserialized).
+- To send only the first part of an unbounded array (e.g. reuse a large `byte[]` buffer instead of allocating an exact-size array for every message), implement `std_msgs.ICdrArrayLength`: `GetSerializedLength(fieldName, arrayLength)` returns the number of elements to send. `sensor_msgs.msg.PointCloud2` does this with `dataLength` (`-1`: the whole `data` array).
 
 #### 7. **Add the Class to the Appropriate Namespace**
 

@@ -180,7 +180,7 @@ namespace ProBridge.Tx.Tf
                     d = data
                 };
 
-                Bridge.SendMsg(host.pushSocket, msg);
+                Bridge.SendMsg(host, msg);
             }
         }
     }

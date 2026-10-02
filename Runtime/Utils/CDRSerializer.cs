@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -23,20 +24,30 @@ namespace ProBridge.Utils
         {
             using (MemoryStream ms = new MemoryStream())
             {
-                using (BinaryWriter writer = new BinaryWriter(ms))
-                {
-                    // CDR Header
-                    if(ROS2Serialization)
-                    {
-                        writer.Write((byte)0x00);
-                        writer.Write((byte)0x01);
-                        writer.Write((byte)0x00);
-                        writer.Write((byte)0x00);
-                    }
-                    
-                    SerializeObject(writer, obj);
-                }
+                Serialize(obj, ms);
                 return ms.ToArray();
+            }
+        }
+
+        /// <summary>
+        /// Serializes into <paramref name="target"/> from its start (the stream is truncated first),
+        /// so a pooled stream can be reused without allocations once it has grown.
+        /// </summary>
+        public static void Serialize(object obj, MemoryStream target)
+        {
+            target.SetLength(0);
+            using (BinaryWriter writer = new BinaryWriter(target, Encoding.UTF8, true))
+            {
+                // CDR Header
+                if(ROS2Serialization)
+                {
+                    writer.Write((byte)0x00);
+                    writer.Write((byte)0x01);
+                    writer.Write((byte)0x00);
+                    writer.Write((byte)0x00);
+                }
+
+                SerializeObject(writer, obj);
             }
         }
 
@@ -48,6 +59,8 @@ namespace ProBridge.Utils
 
             foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
             {
+                if (field.IsNotSerialized) continue; // [NonSerialized]: helper fields, not part of the message
+
                 object value = field.GetValue(obj);
                 Type fieldType = value.GetType();
 
@@ -103,11 +116,13 @@ namespace ProBridge.Utils
                 }
                 else if (fieldType.IsArray)
                 {
-                    Object tmpInstence = Activator.CreateInstance(type);
-                    Object arrayValue = field.GetValue(tmpInstence);
-                    if (arrayValue == null)
+                    if (IsUnboundedArray(type, field))
                     {
-                        WriteArray(writer, value as Array,field.FieldType.GetElementType(), true);
+                        var array = (Array)value;
+                        int length = obj is std_msgs.ICdrArrayLength partial
+                            ? partial.GetSerializedLength(field.Name, array.Length)
+                            : array.Length;
+                        WriteArray(writer, array, field.FieldType.GetElementType(), true, length);
                     }
                     else
                     {
@@ -126,6 +141,15 @@ namespace ProBridge.Utils
             }
         }
 
+        // A field without a default array instance is an unbounded sequence (written with its length),
+        // one with an instance is a fixed-size array. Cached: checking creates an instance of the message.
+        private static readonly ConcurrentDictionary<FieldInfo, bool> UnboundedArrays = new ConcurrentDictionary<FieldInfo, bool>();
+
+        private static bool IsUnboundedArray(Type ownerType, FieldInfo field)
+        {
+            return UnboundedArrays.GetOrAdd(field, f => f.GetValue(Activator.CreateInstance(ownerType)) == null);
+        }
+
         private static void WriteString(BinaryWriter writer, string value)
         {
             if (value == null)
@@ -141,23 +165,27 @@ namespace ProBridge.Utils
             }
         }
 
-        private static void WriteArray(BinaryWriter writer, Array array, Type itemType, bool addLength = false)
+        private static void WriteArray(BinaryWriter writer, Array array, Type itemType, bool addLength = false, int count = -1)
         {
+            if (count < 0)
+                count = array.Length;
+
             if (addLength)
             {
                 if (ROS2Serialization) AlignStream(writer, GetAlignment(typeof(int)));
-                writer.Write(array.Length);
+                writer.Write(count);
             }
 
             if (ROS2Serialization) AlignStream(writer, GetAlignment(itemType));
 
             if (itemType == typeof(byte))
             {
-                writer.Write((byte[])array);
+                writer.Write((byte[])array, 0, count);
             }
             else
-                foreach (var item in array)
+                for (int i = 0; i < count; i++)
                 {
+                    var item = array.GetValue(i);
                     if (itemType == typeof(bool))
                     {
                         writer.Write((bool)item);
@@ -264,6 +292,8 @@ namespace ProBridge.Utils
 
             foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
             {
+                if (field.IsNotSerialized) continue; // [NonSerialized]: helper fields, not part of the message
+
                 if(ROS2Serialization) AlignStream(reader, GetAlignment(field.FieldType));
 
                 if (field.FieldType == typeof(bool))

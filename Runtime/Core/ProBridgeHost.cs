@@ -1,6 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading;
 using NetMQ;
 using UnityEngine;
+using UnityEngine.Profiling;
 using NetMQ.Sockets;
 using UnityEngine.Events;
 
@@ -41,6 +45,24 @@ namespace ProBridge
 
         private ProBridgeConnectionMonitor _connectionMonitor;
 
+        // Sender thread: builds frames (header, compression) and owns the socket sends,
+        // so the main thread only serializes. Frames are sent in order; the oldest is dropped on overflow.
+        private const int MaxQueuedFrames = 64;
+        private const int StopTimeoutMs = 2000;
+
+        private struct OutgoingFrame
+        {
+            public Dictionary<string, object> header;
+            public MemoryStream payload;
+            public int compressionLevel;
+        }
+
+        private readonly Queue<OutgoingFrame> _sendQueue = new Queue<OutgoingFrame>();
+        private readonly object _sendLock = new object();
+        private Thread _sendThread;
+        private bool _sendStopping;
+        private int _droppedFrames;
+
         public void SetupMonitor()
         {
             if (pushSocket == null || _connectionMonitor != null)
@@ -60,8 +82,105 @@ namespace ProBridge
             PumpConnectionEvents();
         }
 
+        /// <summary>
+        /// Queues a serialized message for sending. Takes ownership of <paramref name="payload"/> (a pooled stream).
+        /// </summary>
+        internal void EnqueueFrame(Dictionary<string, object> header, MemoryStream payload, int compressionLevel)
+        {
+            lock (_sendLock)
+            {
+                if (_sendStopping || pushSocket == null)
+                {
+                    ProBridge.ReturnStream(payload);
+                    return;
+                }
+
+                if (_sendQueue.Count >= MaxQueuedFrames)
+                {
+                    ProBridge.ReturnStream(_sendQueue.Dequeue().payload);
+                    _droppedFrames++;
+                }
+
+                _sendQueue.Enqueue(new OutgoingFrame { header = header, payload = payload, compressionLevel = compressionLevel });
+
+                if (_sendThread == null)
+                {
+                    _sendThread = new Thread(SendLoop) { IsBackground = true, Name = $"ProBridge sender {addr}:{port}" };
+                    _sendThread.Start();
+                }
+
+                Monitor.Pulse(_sendLock);
+            }
+        }
+
+        private void SendLoop()
+        {
+            Profiler.BeginThreadProfiling("ProBridge", $"Sender {addr}:{port}");
+            byte[] frame = null;
+            try
+            {
+                while (true)
+                {
+                    OutgoingFrame item;
+                    int dropped;
+                    lock (_sendLock)
+                    {
+                        while (_sendQueue.Count == 0 && !_sendStopping)
+                            Monitor.Wait(_sendLock);
+                        if (_sendQueue.Count == 0)
+                            return; // stopping and drained
+                        item = _sendQueue.Dequeue();
+                        dropped = _droppedFrames;
+                        _droppedFrames = 0;
+                    }
+
+                    if (dropped > 0)
+                        Debug.LogWarning($"[ProBridgeHost {addr}:{port}] Send queue overflow: {dropped} message(s) dropped.");
+
+                    try
+                    {
+                        Profiler.BeginSample("ProBridge.BuildFrame");
+                        int length = ProBridge.BuildFrame(item.header, item.payload, item.compressionLevel, ref frame);
+                        Profiler.EndSample();
+
+                        Profiler.BeginSample("ProBridge.SocketSend");
+                        pushSocket?.TrySendFrame(frame, length);
+                        Profiler.EndSample();
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogWarning($"[ProBridgeHost {addr}:{port}] Failed to send a message: {e.Message}");
+                    }
+                    finally
+                    {
+                        ProBridge.ReturnStream(item.payload);
+                    }
+                }
+            }
+            finally
+            {
+                Profiler.EndThreadProfiling();
+            }
+        }
+
+        // Sends what is queued (e.g. a service response right before a scene reload), then stops the thread.
+        private void StopSender()
+        {
+            Thread thread;
+            lock (_sendLock)
+            {
+                _sendStopping = true;
+                thread = _sendThread;
+                Monitor.Pulse(_sendLock);
+            }
+
+            if (thread != null && !thread.Join(StopTimeoutMs))
+                Debug.LogWarning($"[ProBridgeHost {addr}:{port}] Sender thread did not stop in time.");
+        }
+
         public void Dispose()
         {
+            StopSender();
             _connectionMonitor?.Dispose();
             PumpConnectionEvents();
             _connectionMonitor = null;

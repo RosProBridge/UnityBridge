@@ -29,11 +29,21 @@ namespace sensor_msgs
             public uint count; // Number of elements in the field
         }
 
-        public class PointCloud2 : IRosMsg, IStamped
+        public class PointCloud2 : IRosMsg, IStamped, ICdrArrayLength
         {
             string IRosMsg.GetRosType()
             {
                 return "sensor_msgs.msg.PointCloud2";
+            }
+
+            /// <summary>
+            /// Bytes of <see cref="data"/> to send; -1: the whole array. Lets a publisher reuse a buffer larger than the cloud.
+            /// </summary>
+            [System.NonSerialized] public int dataLength = -1;
+
+            int ICdrArrayLength.GetSerializedLength(string fieldName, int arrayLength)
+            {
+                return fieldName == nameof(data) && dataLength >= 0 ? System.Math.Min(dataLength, arrayLength) : arrayLength;
             }
 
             public Header header { get; set; } = new Header();

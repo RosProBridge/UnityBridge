@@ -75,7 +75,7 @@ namespace ProBridge.Srv
                 onError = onError,
                 deadline = Time.realtimeSinceStartup + timeout
             };
-            bridge.SendMsg(host.pushSocket, ServiceMsg.Create(service, ServiceType, ProBridge.Msg.KindRequest, id, request, _server.port));
+            bridge.SendMsg(host, ServiceMsg.Create(service, ServiceType, ProBridge.Msg.KindRequest, id, request, _server.port));
         }
 
         protected virtual void Update()

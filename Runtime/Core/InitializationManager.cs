@@ -30,6 +30,7 @@ namespace ProBridge
                 // Init hosts sockets. The monitor must be attached before Connect, otherwise a fast
                 // connection (e.g. ROS already running when the scene is reloaded) is never reported.
                 AsyncIO.ForceDotNet.Force();
+                ProBridgeBufferPool.Install();
                 foreach (var host in _hosts)
                 {
                     host.pushSocket = new PushSocket();

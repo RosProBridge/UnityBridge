@@ -1,5 +1,6 @@
 ﻿using System;
 using ProBridge.Utils;
+using Unity.Profiling;
 using UnityEngine;
 
 namespace ProBridge.Tx
@@ -55,6 +56,9 @@ namespace ProBridge.Tx
         private float _nextSkippedReport;
 
         private bool sentHostMissingMsg;
+
+        // Shows in the Profiler how much building each publisher type's message costs
+        private ProfilerMarker _getMsgMarker;
 
         private void OnEnable()
         {
@@ -126,7 +130,10 @@ namespace ProBridge.Tx
             ProBridge.Msg msg;
             try
             {
-                msg = GetMsg(ProBridgeServer.SimTime);
+                if (_getMsgMarker.Handle == IntPtr.Zero)
+                    _getMsgMarker = new ProfilerMarker($"ProBridgeTx.GetMsg {GetType().Name}");
+                using (_getMsgMarker.Auto())
+                    msg = GetMsg(ProBridgeServer.SimTime);
             }
             catch (Exception e)
             {
@@ -135,7 +142,7 @@ namespace ProBridge.Tx
             }
             OnSendMessage?.Invoke(this, msg);
             if (linked && Bridge != null)
-                Bridge.SendMsg(host.pushSocket, msg);
+                Bridge.SendMsg(host, msg);
         }
 
         protected virtual ProBridge.Msg GetMsg(TimeSpan ts)

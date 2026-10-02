@@ -120,7 +120,7 @@ namespace ProBridge.Srv
                 return;
             }
 
-            bridge.SendMsg(host.pushSocket, msg);
+            bridge.SendMsg(host, msg);
         }
     }
 }

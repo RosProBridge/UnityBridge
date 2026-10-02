@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
@@ -8,6 +9,7 @@ using NetMQ;
 using NetMQ.Sockets;
 using Newtonsoft.Json;
 using ProBridge.Utils;
+using Unity.Profiling;
 
 namespace ProBridge
 {
@@ -144,9 +146,63 @@ namespace ProBridge
             }
         }
 
+        private static readonly ProfilerMarker SerializeMarker = new ProfilerMarker("ProBridge.Serialize");
+        private static readonly ConcurrentBag<MemoryStream> StreamPool = new ConcurrentBag<MemoryStream>();
+        private const int StreamPoolSize = 32;
+
+        /// <summary>
+        /// Sends a message through <paramref name="host"/>. Only the CDR serialization runs on the calling (main) thread,
+        /// into a pooled buffer; the header, compression and the socket send run on the host's sender thread.
+        /// </summary>
+        public void SendMsg(ProBridgeHost host, Msg msg)
+        {
+            if (host == null || host.pushSocket == null || msg == null) return;
+
+            var header = BuildHeader(msg);
+            var payload = RentStream();
+            try
+            {
+                using (SerializeMarker.Auto())
+                    CDRSerializer.Serialize(msg.d, payload);
+            }
+            catch (Exception e)
+            {
+                ReturnStream(payload);
+                LogError($"Failed to serialize message for {msg.n} of type {msg.t} : {e}");
+                return;
+            }
+
+            host.EnqueueFrame(header, payload, msg.c);
+        }
+
+        /// <summary>
+        /// Synchronous send on the calling thread. Prefer <see cref="SendMsg(ProBridgeHost, Msg)"/>:
+        /// it keeps compression and the socket send off the main thread.
+        /// </summary>
         public void SendMsg(PushSocket pushSocket, Msg msg)
         {
             if (pushSocket == null || msg == null) return;
+
+            var payload = RentStream();
+            try
+            {
+                CDRSerializer.Serialize(msg.d, payload);
+            }
+            catch (Exception e)
+            {
+                ReturnStream(payload);
+                LogError($"Failed to serialize message for {msg.n} of type {msg.t} : {e}");
+                return;
+            }
+
+            byte[] frame = null;
+            int length = BuildFrame(BuildHeader(msg), payload, msg.c, ref frame);
+            ReturnStream(payload);
+            pushSocket.TrySendFrame(frame, length);
+        }
+
+        internal static Dictionary<string, object> BuildHeader(Msg msg)
+        {
             var messageData = new Dictionary<string, object>
             {
                 { "v", msg.v },
@@ -166,36 +222,66 @@ namespace ProBridge
                 if (msg.replyPort > 0)
                     messageData["p"] = msg.replyPort;
             }
-
-            var json = JsonConvert.SerializeObject(messageData);
-            var header = CompressData(json);
-            
-            byte[] rosMsg;
-            try
-            {
-                rosMsg = CDRSerializer.Serialize(msg.d);
-            }
-            catch (Exception e)
-            {
-                LogError($"Failed to serialize message for {msg.n} of type {msg.t} : {e}");
-                return;
-            }
-            
-            
-            if (msg.c > 0)
-            {
-                rosMsg = CompressData(rosMsg, msg.c);
-            }
-
-            var buf = new byte[sizeof(short) + header.Length + rosMsg.Length];
-            Buffer.BlockCopy(BitConverter.GetBytes((short)header.Length), 0, buf, 0, sizeof(short));
-            Buffer.BlockCopy(header, 0, buf, sizeof(short), header.Length);
-            Buffer.BlockCopy(rosMsg, 0, buf, sizeof(short) + header.Length, rosMsg.Length);
-
-            pushSocket.TrySendFrame(buf);
+            return messageData;
         }
 
-        private byte[] CompressData(string data)
+        /// <summary>
+        /// Builds the wire frame (header length, gzipped JSON header, CDR payload compressed if requested)
+        /// into <paramref name="frame"/>, growing it when needed. Returns the frame length.
+        /// </summary>
+        // Gzipped headers by JSON: a topic's header doesn't change, gzip (and its large buffers) is needed once.
+        // Service messages (call id in the header) are not cached.
+        private static readonly ConcurrentDictionary<string, byte[]> HeaderCache = new ConcurrentDictionary<string, byte[]>();
+        private const int HeaderCacheLimit = 1024;
+
+        private static byte[] GetHeader(Dictionary<string, object> headerData)
+        {
+            var json = JsonConvert.SerializeObject(headerData);
+            if (headerData.ContainsKey("k"))
+                return CompressData(json);
+
+            if (HeaderCache.TryGetValue(json, out var header))
+                return header;
+            if (HeaderCache.Count >= HeaderCacheLimit)
+                HeaderCache.Clear();
+            return HeaderCache[json] = CompressData(json);
+        }
+
+        internal static int BuildFrame(Dictionary<string, object> headerData, MemoryStream payload, int compressionLevel, ref byte[] frame)
+        {
+            var header = GetHeader(headerData);
+
+            byte[] body = payload.GetBuffer();
+            int bodyLength = (int)payload.Length;
+            if (compressionLevel > 0)
+            {
+                body = CompressData(body, bodyLength, compressionLevel);
+                bodyLength = body.Length;
+            }
+
+            int length = sizeof(short) + header.Length + bodyLength;
+            if (frame == null || frame.Length < length)
+                frame = new byte[length];
+
+            frame[0] = (byte)(header.Length & 0xFF);
+            frame[1] = (byte)((header.Length >> 8) & 0xFF);
+            Buffer.BlockCopy(header, 0, frame, sizeof(short), header.Length);
+            Buffer.BlockCopy(body, 0, frame, sizeof(short) + header.Length, bodyLength);
+            return length;
+        }
+
+        internal static MemoryStream RentStream()
+        {
+            return StreamPool.TryTake(out var stream) ? stream : new MemoryStream();
+        }
+
+        internal static void ReturnStream(MemoryStream stream)
+        {
+            if (StreamPool.Count < StreamPoolSize)
+                StreamPool.Add(stream);
+        }
+
+        private static byte[] CompressData(string data)
         {
             using (var compressedStream = new MemoryStream())
             using (var zipStream = new GZipStream(compressedStream, CompressionLevel.Fastest))
@@ -207,13 +293,13 @@ namespace ProBridge
             }
         }
 
-        private byte[] CompressData(byte[] data, int compressionLevel = 1)
+        private static byte[] CompressData(byte[] data, int length, int compressionLevel = 1)
         {
             using (var compressedStream = new MemoryStream())
             using (var zipStream = new GZipStream(compressedStream,
                        (compressionLevel == 1 ? CompressionLevel.Fastest : CompressionLevel.Optimal)))
             {
-                zipStream.Write(data, 0, data.Length);
+                zipStream.Write(data, 0, length);
                 zipStream.Close();
                 return compressedStream.ToArray();
             }
