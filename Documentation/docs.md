@@ -102,10 +102,11 @@ Built-in services:
 
 - **Scene Reload** (`ProBridge/Srv/std_srvs/Scene Reload`, `std_srvs/srv/Trigger`, e.g. `/sim/reload`): reloads the active scene. The response is sent first, the scene is reloaded on the next frame. Simulation time is not reset (it is based on `Time.fixedTimeAsDouble`), so ROS nodes with `use_sim_time` see no time jump.
 - **Sim Pause** (`ProBridge/Srv/std_srvs/Sim Pause`, `std_srvs/srv/SetBool`, e.g. `/sim/pause`): `data: true` pauses the simulation, `false` resumes it.
-  - Pause sets `Time.timeScale = 0` (physics, animations, simulation time / `/clock` and publishers stop) and pauses audio; resume restores the previous time scale.
-  - In the editor the Pause button is pressed as well, and stays in sync: releasing it by hand resumes the simulation, and a pause by the button is reported as paused by the service.
-  - Incoming messages and service calls are still handled while paused (also under the editor pause), so `data: false` always gets through.
+  - Pause sets `Time.timeScale = 0` (physics, animations, simulation time / `/clock` and publishers stop) and pauses audio; resume restores the previous time scale. Scripts using unscaled time and UI keep working (e.g. a "resume" button).
+  - The editor Pause button is not pressed, but a pause by the button counts as paused (reported by the service), and resuming releases it.
+  - Incoming messages and service calls are still handled while paused (also under the editor Pause button), so `data: false` always gets through.
   - The pause survives a scene reload (`Time.timeScale` is global).
+  - The same pause is available from code and UI through `ProBridge.SimPause`: `Pause()`, `Resume()`, `SetPaused(bool)`, `IsPaused` and the `Changed` event (raised on pause and resume, including the editor Pause button).
 
 Custom service: derive from `ProBridgeService<TRequest, TResponse>` and implement `OnRequest`, which runs on the main thread and returns the response:
 
