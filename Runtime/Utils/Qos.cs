@@ -66,6 +66,10 @@ public class Qos
     public Liveliness liveliness = Liveliness.SYSTEM_DEFAULT;
 
 
+    public Qos()
+    {
+    }
+
     public Qos(Object qosObject)
     {
         Type qosObjectType = qosObject.GetType();

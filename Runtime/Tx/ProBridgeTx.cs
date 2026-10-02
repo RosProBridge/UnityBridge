@@ -17,6 +17,9 @@ namespace ProBridge.Tx
         public string topic = "";
         [Range(0, 2)]
         public int compressionLevel = 0;
+        [Tooltip("Keep building messages (data, OnSendMessage) while the host has no connection to the ROS side. " +
+                 "Off: nothing is computed until the link is up.")]
+        public bool useWithoutLink = false;
 
 
 #if ROS_V2
@@ -26,6 +29,19 @@ namespace ProBridge.Tx
         #endregion
 
         public bool Active { get; set; } = true;
+
+        protected ProBridgeTx()
+        {
+#if ROS_V2
+            // Default for new components; serialized values override it.
+            qos = CreateDefaultQos();
+#endif
+        }
+
+#if ROS_V2
+        /// <summary>QoS of a newly added publisher. Override to give a publisher type its own default.</summary>
+        protected virtual Qos CreateDefaultQos() => null;
+#endif
 
         public T data { get; } = new T();
 
@@ -93,6 +109,9 @@ namespace ProBridge.Tx
 
             sentHostMissingMsg = false;
 
+            bool linked = host.IsConnected;
+            if (!linked && !useWithoutLink) return;
+
             // A message is stamped with SimTime, so two sends within one simulation step would carry the same stamp.
             // Scheduled sends happen once per step; this only triggers for extra manual SendMsg() calls.
             var st = ProBridgeServer.SimTime.Ticks;
@@ -115,7 +134,7 @@ namespace ProBridge.Tx
                 return;
             }
             OnSendMessage?.Invoke(this, msg);
-            if (Bridge != null)
+            if (linked && Bridge != null)
                 Bridge.SendMsg(host.pushSocket, msg);
         }
 

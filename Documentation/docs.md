@@ -78,10 +78,13 @@ You can find the subscribers by checking the `Runtime/Rx` directory or if you wa
 For publishers, there are several parameters you need to adjust:
 
 - **Host**: A reference to the `ProBridgeHost` you want to use for publishing. This links your publisher to a specific host configuration.
-- **Send Rate**: The interval between consecutive messages, specified in seconds. This controls how frequently messages are sent.
+- **Send Rate**: The interval between consecutive messages, in simulation seconds. Messages are sent at most once per physics step; `0` sends every physics step.
 - **Topic**: The name of the ROS topic that the publisher will send messages to.
 - **Compression Level**: The level of compression to apply to the ROS messages.
-- **QOS**: Quality of Service settings, applicable only for ROS2. This parameter allows you to configure the reliability and durability of the message delivery.
+- **Use Without Link**: Off by default. While the host has no connection to the ROS side, the publisher does nothing: `GetMsg` is not called, so sensors spend no CPU. Turn it on when other scripts read the publisher's `data` or subscribe to `OnSendMessage` at runtime without ROS; messages are then built, but still not serialized or sent until the link is up.
+- **QOS**: Quality of Service settings, applicable only for ROS2. This parameter allows you to configure the reliability and durability of the message delivery. A publisher type can set its own default for new components by overriding `CreateDefaultQos()`.
+
+> **Note:** Dynamic TF (`TfSender`) is also skipped while its host is disconnected. Static TF is sent on every new connection.
 
 You can find the subscribers by checking the `Runtime/Tx/Msgs` directory or if you want to create your own subscriber see [Creating Custom Publishers](#creating-custom-publishers)
 

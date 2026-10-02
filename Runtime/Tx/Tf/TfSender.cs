@@ -139,6 +139,7 @@ namespace ProBridge.Tx.Tf
 
         protected void SendDynamicMsg()
         {
+            if (host && !host.IsConnected) return;
             SendMsg();
         }
 

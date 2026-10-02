@@ -57,6 +57,12 @@ If the installation process was successful, you should now be able to see `ProBr
 ![Package Folder](Images/packages_folder.png "Navigating to the ProBridge Package")
 
 
+## Features
+
+- Publishers (Tx) and subscribers (Rx) for ROS 1 / ROS 2 over ZeroMQ.
+- Sends are scheduled per simulation (physics) step; `Send Rate = 0` publishes every step.
+- Connection monitoring: `ProBridgeHost.IsConnected` / `ConnectionStatusChanged`. Publishers and dynamic TF do no work while the host is disconnected (unless `Use Without Link` is enabled on a publisher).
+
 ## Documentation
 
 For usage details and how to create new custom publisher and subscribers check the [Documentation](/Documentation/docs.md)
