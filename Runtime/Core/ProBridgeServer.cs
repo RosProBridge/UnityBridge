@@ -60,17 +60,34 @@ namespace ProBridge
         private Queue<ProBridge.Msg> _queue = new Queue<ProBridge.Msg>();
         [HideInInspector] public long _initTime;
 
+        private static readonly List<ISimStepListener> _firstSimStepListeners = new List<ISimStepListener>();
         private static readonly List<ISimStepListener> _simStepListeners = new List<ISimStepListener>();
 
-        internal static void AddSimStepListener(ISimStepListener listener)
+        /// <param name="first">
+        /// Call before the other listeners of the step. Used by TF: its message of the step is sent before the sensor
+        /// messages of the step, so a receiver (e.g. RViz) has the transform for their stamp when they arrive.
+        /// </param>
+        internal static void AddSimStepListener(ISimStepListener listener, bool first = false)
         {
-            if (!_simStepListeners.Contains(listener))
-                _simStepListeners.Add(listener);
+            var listeners = first ? _firstSimStepListeners : _simStepListeners;
+            if (!listeners.Contains(listener))
+                listeners.Add(listener);
         }
 
         internal static void RemoveSimStepListener(ISimStepListener listener)
         {
+            _firstSimStepListeners.Remove(listener);
             _simStepListeners.Remove(listener);
+        }
+
+        private static void NotifySimStep(List<ISimStepListener> listeners)
+        {
+            // Iterate backwards: a listener may disable itself (and unsubscribe) while sending.
+            for (int i = listeners.Count - 1; i >= 0; i--)
+            {
+                if (i < listeners.Count)
+                    listeners[i].OnSimStep();
+            }
         }
 
         public void Dispose()
@@ -138,12 +155,8 @@ namespace ProBridge
 
             ProcessIncoming();
 
-            // Iterate backwards: a listener may disable itself (and unsubscribe) while sending.
-            for (int i = _simStepListeners.Count - 1; i >= 0; i--)
-            {
-                if (i < _simStepListeners.Count)
-                    _simStepListeners[i].OnSimStep();
-            }
+            NotifySimStep(_firstSimStepListeners);
+            NotifySimStep(_simStepListeners);
         }
 
         private void ProcessIncoming()

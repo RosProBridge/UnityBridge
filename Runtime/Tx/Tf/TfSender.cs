@@ -94,11 +94,12 @@ namespace ProBridge.Tx.Tf
         }
 
         // Dynamic TF is sent on simulation steps, like the other publishers: its stamp and poses are those of
-        // the step, the same as of the sensor messages sent in that step.
+        // the step, the same as of the sensor messages sent in that step. It goes first in the step, so the
+        // transform for a sensor message's stamp is already there when the message arrives.
         private void StartDynamicSending()
         {
             _nextSendTime = UnityEngine.Time.fixedTimeAsDouble;
-            ProBridgeServer.AddSimStepListener(this);
+            ProBridgeServer.AddSimStepListener(this, first: true);
         }
 
         void ISimStepListener.OnSimStep()
@@ -163,10 +164,9 @@ namespace ProBridge.Tx.Tf
 
         private IEnumerator StaticSendingCoroutine()
         {
-            while (_lastSimTime >= ProBridgeServer.SimTime.Ticks)
-            {
-                yield return new WaitForSeconds(0.1f);
-            }
+            // Give the new subscriber time to get ready (see SendStaticMsg). Real time: it doesn't depend on dynamic
+            // TF (sent every step, it left no gap for the former SimTime check, so static TF was never sent) and works on pause.
+            yield return new WaitForSecondsRealtime(0.2f);
             Debug.Log("Connected to a new subscriber. Sending static!");
             SendMsg(true);
         }
