@@ -12,12 +12,15 @@ using Newtonsoft.Json.Linq;
 namespace ProBridge.Tx.Tf
 {
     [AddComponentMenu("ProBridge/Tx/tf2_msgs/Sender")]
-    public class TfSender : ProBridgeSingletone<TfSender>, IProBridgeTx
+    public class TfSender : ProBridgeSingletone<TfSender>, IProBridgeTx, ISimStepListener
     {
         #region Inspector
 
         public ProBridgeHost host;
-        public float sendRate = 0.1f;
+        [Tooltip("Dynamic TF send period in simulation seconds. 0 sends every simulation (physics) step: " +
+                 "sensor messages then always have a transform with exactly their stamp.")]
+        [Min(0f)]
+        public float sendRate = 0f;
         [Range(0, 2)] public int compressionLevel = 0;
         public string dynamicTopic = "/tf";
         public string staticTopic = "/tf_static";
@@ -69,15 +72,50 @@ namespace ProBridge.Tx.Tf
 
         private bool _needUpdateStaticMsgs = false;
 
+        private bool _started;
+        private double _nextSendTime;
+
         public void CallRepeatingMethods()
         {
             InvokeRepeating("UpdateStaticMsgs", 1, 1);
-            InvokeRepeating("SendDynamicMsg", 1, sendRate);
+            _started = true;
+            StartDynamicSending();
+        }
+
+        private void OnEnable()
+        {
+            if (_started)
+                StartDynamicSending();
         }
 
         private void OnDisable()
         {
-            CancelInvoke("SendDynamicMsg");
+            ProBridgeServer.RemoveSimStepListener(this);
+        }
+
+        // Dynamic TF is sent on simulation steps, like the other publishers: its stamp and poses are those of
+        // the step, the same as of the sensor messages sent in that step.
+        private void StartDynamicSending()
+        {
+            _nextSendTime = UnityEngine.Time.fixedTimeAsDouble;
+            ProBridgeServer.AddSimStepListener(this);
+        }
+
+        void ISimStepListener.OnSimStep()
+        {
+            if (sendRate > 0f)
+            {
+                double now = UnityEngine.Time.fixedTimeAsDouble;
+                if (now + 1e-6 < _nextSendTime)
+                    return;
+
+                // Keep the average rate, but never queue up several sends when falling behind.
+                _nextSendTime += sendRate;
+                if (_nextSendTime <= now)
+                    _nextSendTime = now + sendRate;
+            }
+
+            SendDynamicMsg();
         }
 
         public void LinkAdd(TfLink value)

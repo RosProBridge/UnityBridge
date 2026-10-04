@@ -89,6 +89,8 @@ For publishers, there are several parameters you need to adjust:
 
 > **Note:** Dynamic TF (`TfSender`) is also skipped while its host is disconnected. Static TF is sent on every new connection.
 
+Dynamic TF is sent on simulation steps like the other publishers; its `Send Rate` is in simulation seconds. With `0` (the default) a transform with exactly the stamp of every sensor message is available, so tools like RViz can transform e.g. point clouds to a moving frame (`map`) without waiting for the next TF. With a longer period RViz drops sensor messages that wait too long for the next TF ("Could not transform"), the more often the rarer TF is sent.
+
 All publishers and `TfSender` implement `ProBridge.Tx.IProBridgeTx` for UI and tools: `Topic`, `Active` (set to `false` to stop building and sending; switching `TfSender` back on resends static TF) and `SentCount` (messages handed to the bridge, to show the actual rate).
 
 You can find the subscribers by checking the `Runtime/Tx/Msgs` directory or if you want to create your own subscriber see [Creating Custom Publishers](#creating-custom-publishers)
