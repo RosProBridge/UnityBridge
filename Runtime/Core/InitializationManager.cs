@@ -2,6 +2,7 @@
 using NetMQ;
 using NetMQ.Sockets;
 using ProBridge.Tx.Tf;
+using ProBridge.Utils;
 using UnityEngine;
 
 
@@ -17,9 +18,9 @@ namespace ProBridge
 
         private void Awake()
         {
-            _hosts = FindObjectsOfType<ProBridgeHost>(true);
-            _server = FindObjectOfType<ProBridgeServer>();
-            _tfSender = FindObjectOfType<TfSender>();
+            _hosts = ObjectFinder.FindAll<ProBridgeHost>(true);
+            _server = ObjectFinder.FindAny<ProBridgeServer>();
+            _tfSender = ObjectFinder.FindAny<TfSender>();
 
             try
             {

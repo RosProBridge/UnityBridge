@@ -35,7 +35,7 @@ namespace ProBridge.Srv
         {
             ServiceType = ServiceMsg.ServiceTypeOf<TRequest>();
 
-            _server = FindObjectOfType<ProBridgeServer>();
+            _server = ObjectFinder.FindAny<ProBridgeServer>();
             if (_server != null)
                 _server.MessageEvent.AddListener(OnBridgeMessage);
         }

@@ -1,3 +1,4 @@
+using ProBridge.Utils;
 using UnityEngine;
 
 namespace ProBridge
@@ -10,14 +11,14 @@ namespace ProBridge
             get
             {
                 if (__instance == null)
-                   __instance = FindObjectOfType<T>();
+                   __instance = ObjectFinder.FindAny<T>();
                 return __instance;
             }
         }
 
         protected void OnValidate()
         {
-            if (FindObjectsOfType<T>().Length > 1)
+            if (ObjectFinder.FindAll<T>().Length > 1)
 
             {
                 Debug.LogError("Singleton<" + this.GetType() + "> already has an instance on scene. Component will be destroyed.");

@@ -84,10 +84,12 @@ For publishers, there are several parameters you need to adjust:
   Only building the message and its CDR serialization (into a pooled buffer) run on the main thread; the header, compression and the socket send run on a sender thread of the `ProBridgeHost` (in order; the oldest message is dropped if more than 64 are waiting).
 - **Topic**: The name of the ROS topic that the publisher will send messages to.
 - **Compression Level**: The level of compression to apply to the ROS messages.
-- **Use Without Link**: Off by default. While the host has no connection to the ROS side, the publisher does nothing: `GetMsg` is not called, so sensors spend no CPU. Turn it on when other scripts read the publisher's `data` or subscribe to `OnSendMessage` at runtime without ROS; messages are then built, but still not serialized or sent until the link is up.
-- **QOS**: Quality of Service settings, applicable only for ROS2. This parameter allows you to configure the reliability and durability of the message delivery. A publisher type can set its own default for new components by overriding `CreateDefaultQos()`.
+- **Use Without Connect**: Off by default. While the host has no connection to the ROS side, the publisher does nothing: `GetMsg` is not called, so sensors spend no CPU. Turn it on when other scripts read the publisher's `data` or subscribe to `OnSendMessage` at runtime without ROS; messages are then built, but still not serialized or sent until the link is up.
+- **QOS**: Quality of Service settings, applicable only for ROS2. This parameter allows you to configure the reliability and durability of the message delivery. New components default to `Enum` / `qos_profile_system_default`; a publisher type can set its own default by overriding `CreateDefaultQos()`.
 
 > **Note:** Dynamic TF (`TfSender`) is also skipped while its host is disconnected. Static TF is sent on every new connection.
+
+All publishers and `TfSender` implement `ProBridge.Tx.IProBridgeTx` for UI and tools: `Topic`, `Active` (set to `false` to stop building and sending; switching `TfSender` back on resends static TF) and `SentCount` (messages handed to the bridge, to show the actual rate).
 
 You can find the subscribers by checking the `Runtime/Tx/Msgs` directory or if you want to create your own subscriber see [Creating Custom Publishers](#creating-custom-publishers)
 

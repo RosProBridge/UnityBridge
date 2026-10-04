@@ -2,10 +2,11 @@
 using ProBridge.Utils;
 using Unity.Profiling;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace ProBridge.Tx
 {
-    public abstract class ProBridgeTx<T> : MonoBehaviour, ISimStepListener where T : std_msgs.IRosMsg, new()
+    public abstract class ProBridgeTx<T> : MonoBehaviour, ISimStepListener, IProBridgeTx where T : std_msgs.IRosMsg, new()
     {
         private const float SkippedReportInterval = 5f;
 
@@ -20,7 +21,8 @@ namespace ProBridge.Tx
         public int compressionLevel = 0;
         [Tooltip("Keep building messages (data, OnSendMessage) while the host has no connection to the ROS side. " +
                  "Off: nothing is computed until the link is up.")]
-        public bool useWithoutLink = false;
+        [FormerlySerializedAs("useWithoutLink")]
+        public bool useWithoutConnect = false;
 
 
 #if ROS_V2
@@ -29,7 +31,12 @@ namespace ProBridge.Tx
 #endif
         #endregion
 
+        /// <summary>False: nothing is built or sent (e.g. switched off from the UI).</summary>
         public bool Active { get; set; } = true;
+
+        public string Topic => topic;
+
+        public long SentCount { get; private set; }
 
         protected ProBridgeTx()
         {
@@ -40,8 +47,14 @@ namespace ProBridge.Tx
         }
 
 #if ROS_V2
-        /// <summary>QoS of a newly added publisher. Override to give a publisher type its own default.</summary>
-        protected virtual Qos CreateDefaultQos() => null;
+        /// <summary>
+        /// QoS of a newly added publisher: qos_profile_system_default. Override to give a publisher type its own default.
+        /// </summary>
+        protected virtual Qos CreateDefaultQos() => new Qos
+        {
+            qosType = Qos.QOSType.Enum,
+            enumQos = Qos.QOSStr.qos_profile_system_default
+        };
 #endif
 
         public T data { get; } = new T();
@@ -114,7 +127,7 @@ namespace ProBridge.Tx
             sentHostMissingMsg = false;
 
             bool linked = host.IsConnected;
-            if (!linked && !useWithoutLink) return;
+            if (!linked && !useWithoutConnect) return;
 
             // A message is stamped with SimTime, so two sends within one simulation step would carry the same stamp.
             // Scheduled sends happen once per step; this only triggers for extra manual SendMsg() calls.
@@ -142,7 +155,11 @@ namespace ProBridge.Tx
             }
             OnSendMessage?.Invoke(this, msg);
             if (linked && Bridge != null)
+            {
                 Bridge.SendMsg(host, msg);
+                if (msg != null)
+                    SentCount++;
+            }
         }
 
         protected virtual ProBridge.Msg GetMsg(TimeSpan ts)

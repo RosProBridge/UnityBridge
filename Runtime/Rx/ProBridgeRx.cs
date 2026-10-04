@@ -45,7 +45,7 @@ namespace ProBridge.Rx
 
         private void Awake()
         {
-            var srv = FindObjectOfType<ProBridgeServer>();
+            var srv = ObjectFinder.FindAny<ProBridgeServer>();
             if (srv == null)
                 return;
 
@@ -54,7 +54,7 @@ namespace ProBridge.Rx
 
         private void OnDestroy()
         {
-            var srv = FindObjectOfType<ProBridgeServer>();
+            var srv = ObjectFinder.FindAny<ProBridgeServer>();
             if (srv == null)
                 return;
 

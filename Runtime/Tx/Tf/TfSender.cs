@@ -12,7 +12,7 @@ using Newtonsoft.Json.Linq;
 namespace ProBridge.Tx.Tf
 {
     [AddComponentMenu("ProBridge/Tx/tf2_msgs/Sender")]
-    public class TfSender : ProBridgeSingletone<TfSender>
+    public class TfSender : ProBridgeSingletone<TfSender>, IProBridgeTx
     {
         #region Inspector
 
@@ -28,7 +28,38 @@ namespace ProBridge.Tx.Tf
 
         #endregion
 
-        public bool Active { get; set; } = true;
+        private bool _active = true;
+
+        /// <summary>False: no TF is sent. Switching on resends the static transforms.</summary>
+        public bool Active
+        {
+            get => _active;
+            set
+            {
+                if (value && !_active)
+                    _needUpdateStaticMsgs = true;
+                _active = value;
+            }
+        }
+
+        public string Topic => dynamicTopic;
+
+        /// <summary>True if there are dynamic links with children, i.e. something to send to the dynamic topic.</summary>
+        public bool HasDynamicLinks
+        {
+            get
+            {
+                lock (_links)
+                {
+                    foreach (var link in _links)
+                        if (link && !link.is_static && link.isActiveAndEnabled && link.children.Length > 0)
+                            return true;
+                }
+                return false;
+            }
+        }
+
+        public long SentCount { get; private set; }
 
         public ProBridge Bridge;
 
@@ -181,6 +212,7 @@ namespace ProBridge.Tx.Tf
                 };
 
                 Bridge.SendMsg(host, msg);
+                SentCount++;
             }
         }
     }

@@ -62,7 +62,7 @@ If the installation process was successful, you should now be able to see `ProBr
 - Publishers (Tx) and subscribers (Rx) for ROS 1 / ROS 2 over ZeroMQ.
 - Sends are scheduled per simulation (physics) step; `Send Rate = 0` publishes every step.
 - ROS services in both directions (ROS2 bridge): served by Unity and advertised to the bridge automatically (`ProBridgeService`, e.g. scene reload over `std_srvs/Trigger`), or called from Unity (`ProBridgeServiceClient`).
-- Connection monitoring: `ProBridgeHost.IsConnected` / `ConnectionStatusChanged`. Publishers and dynamic TF do no work while the host is disconnected (unless `Use Without Link` is enabled on a publisher).
+- Connection monitoring: `ProBridgeHost.IsConnected` / `ConnectionStatusChanged`. Publishers and dynamic TF do no work while the host is disconnected (unless `Use Without Connect` is enabled on a publisher).
 
 ## Documentation
 

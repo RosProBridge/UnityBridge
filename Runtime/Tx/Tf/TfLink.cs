@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using ProBridge.Utils;
+using UnityEngine;
 
 namespace ProBridge.Tx.Tf
 {
@@ -13,7 +14,7 @@ namespace ProBridge.Tx.Tf
 
         private void Awake()
         {
-            __sender = FindObjectOfType<TfSender>();
+            __sender = ObjectFinder.FindAny<TfSender>();
         }
 
         private void OnEnable()

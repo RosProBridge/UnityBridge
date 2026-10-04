@@ -97,8 +97,6 @@ namespace ProBridge
 
         private int _port;
         private string _ip = "127.0.0.1";
-        private bool _active = true;
-        private Thread _th = null;
         private PullSocket _pullSocket;
         private ProBridgeConnectionMonitor _connectionMonitor;
 
@@ -136,14 +134,8 @@ namespace ProBridge
 
         public void Dispose()
         {
-            _active = false;
             _connectionMonitor?.Dispose();
             _pullSocket.Close();
-            if (_th != null)
-            {
-                if (_th.Join(1000))
-                    _th?.Abort();
-            }
         }
 
         private static readonly ProfilerMarker SerializeMarker = new ProfilerMarker("ProBridge.Serialize");
