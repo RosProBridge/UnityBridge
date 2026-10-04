@@ -64,6 +64,21 @@ namespace ProBridge.Tx.Tf
 
         public long SentCount { get; private set; }
 
+        /// <summary>Dynamic TF period; changing it while running reschedules the sends.</summary>
+        public float SendRate
+        {
+            get => sendRate;
+            set
+            {
+                sendRate = Mathf.Max(0.001f, value);
+                if (IsInvoking("SendDynamicMsg"))
+                {
+                    CancelInvoke("SendDynamicMsg");
+                    InvokeRepeating("SendDynamicMsg", sendRate, sendRate);
+                }
+            }
+        }
+
         public ProBridge Bridge;
 
         private long _lastSimTime = 0;

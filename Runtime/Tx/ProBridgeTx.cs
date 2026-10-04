@@ -38,6 +38,12 @@ namespace ProBridge.Tx
 
         public long SentCount { get; private set; }
 
+        public float SendRate
+        {
+            get => sendRate;
+            set => sendRate = Mathf.Max(0f, value);
+        }
+
         protected ProBridgeTx()
         {
 #if ROS_V2

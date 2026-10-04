@@ -16,11 +16,26 @@ namespace ProBridge
         private ProBridgeHost[] _hosts;
         private TfSender _tfSender;
 
+        /// <summary>
+        /// Raised in Awake before any socket is created: lets the application change addresses and ports
+        /// (e.g. from user settings) of the server and hosts of the scene. The server may be null.
+        /// </summary>
+        public static event Action<ProBridgeServer, ProBridgeHost[]> BeforeConnect;
+
         private void Awake()
         {
             _hosts = ObjectFinder.FindAll<ProBridgeHost>(true);
             _server = ObjectFinder.FindAny<ProBridgeServer>();
             _tfSender = ObjectFinder.FindAny<TfSender>();
+
+            try
+            {
+                BeforeConnect?.Invoke(_server, _hosts);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
 
             try
             {

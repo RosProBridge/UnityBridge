@@ -62,6 +62,8 @@ The `ProBridgeHost` component acts as your publisher in the scene. Unlike the `P
 
 This setup allows you to send ROS messages to multiple destinations by configuring different hosts.
 
+To set addresses at runtime (e.g. from user settings), subscribe to `InitializationManager.BeforeConnect` (static, raised in `Awake` before any socket is created) and change `ProBridgeServer.ip/port` and `ProBridgeHost.addr/port`; subscribe early, e.g. from a `[RuntimeInitializeOnLoadMethod]`.
+
 ### Adding Publishers and Subscribers
 
 Once you have configured your `ProBridgeServer` and `ProBridgeHost` components, you can add your publishers and subscribers as components to your GameObjects in the scene.

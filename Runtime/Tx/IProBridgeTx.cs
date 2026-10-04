@@ -14,5 +14,8 @@ namespace ProBridge.Tx
 
         /// <summary>Messages handed to the bridge for sending since start (to measure the actual rate).</summary>
         long SentCount { get; }
+
+        /// <summary>Send period in seconds (0: every physics step); can be changed at runtime.</summary>
+        float SendRate { get; set; }
     }
 }
