@@ -176,7 +176,8 @@ namespace ProBridge.Utils
                 writer.Write(count);
             }
 
-            if (ROS2Serialization) AlignStream(writer, GetAlignment(itemType));
+            // An empty sequence has no elements to align to
+            if (ROS2Serialization && count > 0) AlignStream(writer, GetAlignment(itemType));
 
             if (itemType == typeof(byte))
             {
@@ -228,6 +229,8 @@ namespace ProBridge.Utils
                     }
                     else if (itemType == typeof(string))
                     {
+                        // Each string length is a uint32 and must start on a 4-byte boundary.
+                        if (ROS2Serialization) AlignStream(writer, GetAlignment(typeof(string)));
                         WriteString(writer, (string)item);
                     }
                     else if (itemType.IsClass && !itemType.IsPrimitive) // Classes
